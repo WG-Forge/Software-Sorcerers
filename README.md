@@ -1,2 +1,2 @@
 # Software-Sorcerers
-![image](https://user-images.githubusercontent.com/99563071/227656668-24f88d7d-6a5d-4f6d-9559-59247363fc24.png)
+![image](https://user-images.githubusercontent.com/99563071/227657159-565d53d5-fa32-4446-95fb-3f57124400b7.png)
