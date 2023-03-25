@@ -104,7 +104,7 @@ if __name__ == "__main__":
         expected.update(neighbours(i))
     assert expected == in_radius((1, -1, 0), 2)
 
-map_cells = in_radius((0, 0, 0),4)
-start = (0, 3, -3)
-finish = (-2, -1, 3)
-print(a_star(map_cells, start, finish))
+    map_cells = in_radius_excl((0, 0, 0), 2, 3)
+    start = (0, 3, -3)
+    finish = (-1, -2, 3)
+    print(a_star(map_cells, start, finish))

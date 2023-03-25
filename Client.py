@@ -4,6 +4,7 @@ from typing import Optional
 
 SERVER = 'wgforge-srv.wargaming.net'
 PORT = 443
+BUFFER_SIZE = 8192
 
 
 class Client:
@@ -20,7 +21,7 @@ class Client:
         self.sock.send(data)
 
     def receive(self) -> bytes:
-        response = self.sock.recv(1024)
+        response = self.sock.recv(BUFFER_SIZE)
         return response
 
 
