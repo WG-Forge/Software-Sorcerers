@@ -1,4 +1,6 @@
 from itertools import permutations as perm
+from collections import namedtuple
+from heapq import merge
 
 
 def cube_distance(hex1: tuple[int, int, int], hex2: tuple[int, int, int]) -> int:
@@ -51,6 +53,45 @@ def in_radius_excl(hex_: tuple[int, int, int], small_radius: int, big_radius: in
     return in_radius(hex_, big_radius).difference(in_radius(hex_, small_radius))
 
 
+def a_star(map_cells: set[tuple[int, int, int]], start: tuple[int, int, int],
+           finish: tuple[int, int, int]) -> list[tuple[int, int, int]]:
+    """
+    A* pathfinding algorithm
+    :param map_cells: set of available map cells excluding spawn points, obstacles
+    :param start: starting cell
+    :param finish: target cell
+    :return: list with path coordinate tuples excluding start point
+    """
+    Node = namedtuple("node", ['coords', 'previous'])
+    start = Node(start, None)
+
+    def build_path(to_node):
+        path = []
+        while not(to_node.previous is None):
+            path.append(to_node.coords)
+            to_node = to_node.previous
+        return path[::-1]
+
+    reachable = [start, ]
+    explored = set()
+    while reachable:
+        current_node = reachable.pop(0)
+        if current_node.coords == finish:
+            return build_path(current_node)
+        explored.add(current_node.coords)
+        new_reachable = [i for i in (neighbours(current_node.coords).difference(explored)).intersection(map_cells)]
+        tmp = []
+        for node in new_reachable:
+            if node not in (i.coords for i in reachable):
+                node = Node(node, current_node)
+                tmp.append(node)
+        tmp.sort(key=lambda x: cube_distance(x.coords, finish))
+        reachable = list(merge(reachable, tmp, key=lambda x: cube_distance(x.coords, finish)))
+
+
+
+
+
 if __name__ == "__main__":
     assert cube_distance((1, 2, -3), (1, 2, -3)) == 0
     assert cube_distance((1, 1, -2), (0, -3, 3)) == 5
@@ -62,3 +103,8 @@ if __name__ == "__main__":
     for i in neighbours((1, -1, 0)):
         expected.update(neighbours(i))
     assert expected == in_radius((1, -1, 0), 2)
+
+map_cells = in_radius((0, 0, 0),4)
+start = (0, 3, -3)
+finish = (-2, -1, 3)
+print(a_star(map_cells, start, finish))
