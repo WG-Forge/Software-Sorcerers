@@ -27,7 +27,7 @@ class Controller:
         while not self.game_state.is_finished:  # TODO Game_state must have bool field is_finished
             while self.game_state.current_player_id != self.idx:
                 self.refresh_game_state()
-                self.refresh_game_actions()
+            self.refresh_game_actions()
             for vehicle in self.vehicles_list:
                 self.refresh_game_state()
                 if vehicle.id in self.game_state.our_vehicles:
