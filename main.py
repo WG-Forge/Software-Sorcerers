@@ -1,6 +1,6 @@
 from Client import Dialogue
-from Model import Game_state, Game_map, Game_actions  # TODO Classes to implement
-from Vehicle import Vehicle  # TODO Class to implement it shoud be a fabric that instantiates proper type of vehicle
+from Model import GameState, GameMap, GameActions  # TODO Classes to implement
+from Vehicle import VehicleFactory  # TODO Class to implement it shoud be a fabric that instantiates proper type of vehicle
 
 LOGIN_DATA = {
     "name": "Sorcerer",
@@ -40,14 +40,14 @@ class Controller:
         self.dialogue.send("LOGOUT")
 
     def refresh_game_state(self):
-        self.game_state = Game_state(self.dialogue.send("GAME_STATE"))  # TODO Game_state must parse answer dict
+        self.game_state = GameState(self.dialogue.send("GAME_STATE"))  # TODO Game_state must parse answer dict
 
     def refresh_game_actions(self):
-        self.game_actions = Game_actions(self.dialogue.send("ACTIONS"))  # TODO Game_actions must parse answer dict
+        self.game_actions = GameActions(self.dialogue.send("ACTIONS"))  # TODO Game_actions must parse answer dict
 
     def init_vehicles(self):
-        self.vehicles_list = [Vehicle(our_vehicle) for our_vehicle in self.game_state.our_vehicles.items]
-        # TODO Game_state must have ordered dict "our_vehicles" with id: (coordinates, type_of_vehicles)
+        self.vehicles_list = [VehicleFactory.build(our_vehicle) for our_vehicle in self.game_state.our_vehicles.items]
+        # TODO Game_state must have ordered (left-to right) dict "our_vehicles" with id: (coordinates, type_of_vehicles)
         # TODO Vehicle class must initialise vehicles of propper type in given coordinates
 
     def init_game(self):
@@ -55,6 +55,6 @@ class Controller:
         login_answer = self.dialogue.send("LOGIN", LOGIN_DATA)
         self.idx = login_answer["idx"]
         map_answer = self.dialogue.send("MAP")
-        self.map = Game_map(map_answer)  # TODO  Game_map must parse answer dict
+        self.map = GameMap(map_answer)  # TODO  Game_map must parse answer dict
         self.refresh_game_state()
         self.init_vehicles()
