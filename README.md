@@ -22,4 +22,4 @@
 **cube_math.py** contains functions to handle some cubic coordinate math operations, and A* pathfinding algorithm for cubic coordinate cells
 
 
-<img width="690" alt="Screenshot 2023-03-26 at 23 08 36" src="https://user-images.githubusercontent.com/99563071/227804801-4d2874d4-161a-45f3-90a2-da13bea1d54d.png">
+<img width="651" alt="Screenshot 2023-03-26 at 23 15 08" src="https://user-images.githubusercontent.com/99563071/227805024-7e97d813-d841-4a15-a668-1431fb8b9cb8.png">
