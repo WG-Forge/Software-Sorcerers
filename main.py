@@ -1,6 +1,6 @@
 from Client import Dialogue
 from Model import GameState, GameMap, GameActions  # TODO Classes to implement
-from Vehicle import VehicleFactory  # TODO Class to implement it shoud be a fabric that instantiates proper type of vehicle
+from Vehicle import VehicleFactory
 
 LOGIN_DATA = {
     "name": "Sorcerer",
@@ -48,7 +48,6 @@ class Controller:
     def init_vehicles(self):
         self.vehicles_list = [VehicleFactory.build(our_vehicle) for our_vehicle in self.game_state.our_vehicles.items]
         # TODO Game_state must have ordered (left-to right) dict "our_vehicles" with id: (coordinates, type_of_vehicles)
-        # TODO Vehicle class must initialise vehicles of propper type in given coordinates
 
     def init_game(self):
         self.dialogue.start_dialogue()
