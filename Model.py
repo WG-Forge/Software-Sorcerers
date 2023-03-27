@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, OrderedDict
 
 
 import cube_math as cm
@@ -54,15 +54,35 @@ class GameMap:
 # <------------------ end of methods for next stages ---------------------
 
 class GameState:
-    def __init__(self, data: dict):
-        self.our_tanks =
-        self.current_player_id
-        self.tank_cells =  # all tank cells for
-        self.enemy_cells =
-        self.agressive_cell =
+    def __init__(self, data: dict, idx: Optional[int] = None):
+        self.is_finished = data["finished"]
+        self.current_player_id = data["current_player_idx"]
+        self.winner = data["winner"]
+        self.our_tanks = None # ordered (left to right) dict{id:TankModel}
+        self.tank_cells = self.init_tank_cells(data["vehicles"]) # set of all tank cells for moving logic
+        self.agressive_cells = self.init_tank_cells(data["vehicles"], data["attack_matrix"], idx)
 
+        if not (idx is None)
+            self.init_our_tanks(data["vehicles"], idx)
 
+    @staticmethod
+    def init_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int: "TankModel"]:
+        pass
+    @staticmethod
+    def init_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
+        pass
+
+    @staticmethod
+    def init_agressive_cells(vehicles: dict, attack_matrix:  dict, idx: int) -> Optional[set[tuple[int, int, int]]]:
+        pass
 class GameActions:
+    def __init__(self, data: dict):
     pass
 
-class TankModel
+class TankModel:
+    def __init__(self, data):
+        self.id =
+        self.hp =
+        self.vehicle_type =
+        self.coordinates =
+        self.shoot_range_bonus =
