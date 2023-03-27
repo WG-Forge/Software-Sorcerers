@@ -54,7 +54,15 @@ class GameMap:
 # <------------------ end of methods for next stages ---------------------
 
 class GameState:
-    pass
+    def __init__(self, data: dict):
+        self.our_tanks =
+        self.current_player_id
+        self.tank_cells =  # all tank cells for
+        self.enemy_cells =
+        self.agressive_cell =
+
 
 class GameActions:
     pass
+
+class TankModel
