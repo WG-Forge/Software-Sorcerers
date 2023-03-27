@@ -63,13 +63,17 @@ class Receiver:
     }
 
     @classmethod
-    def translate(cls, answer: bytes) -> tuple[str, int, Optional[dict]]:  # TODO handle errors, and returns only dict
+    def translate(cls, answer: bytes) -> Optional[dict]:
         status = cls.status_code[int.from_bytes(answer[0:4], byteorder="little")]
+        if status != "OKEY":
+            raise RuntimeError(f"{status}")
         msg_length = int.from_bytes(answer[4:8], byteorder="little")
+        if msg_length > BUFFER_SIZE - 8:
+            raise BufferError(f"Low buffer size to handle {msg_length}")
         json_part = (answer[8:]).decode("UTF-8")
         if json_part:
-            return status, msg_length, json.loads(json_part)
-        return status, msg_length, None
+            return json.loads(json_part)
+        return None
 
 
 class Dialogue:
