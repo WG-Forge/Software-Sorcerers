@@ -24,9 +24,9 @@ class GameMap:
 # <------------------- end of attributes for next stages ----------------
 
     @staticmethod
-    def parse_obstacles(content: dict):
+    def parse_obstacles(content: dict) -> set[Optional[tuple[int, int, int]]]:
         if not ("obstacle" in content):
-            return {}  # Here is not used None to avoid TypeError in self.available_cells
+            return set()  # Here is not used None to avoid TypeError in self.available_cells
         return {(obs["x"], obs["y"], obs["z"])for obs in content["obstacle"]}
 
     @staticmethod
@@ -54,35 +54,35 @@ class GameMap:
 # <------------------ end of methods for next stages ---------------------
 
 class GameState:
-    def __init__(self, data: dict, idx: Optional[int] = None):
+    def __init__(self, data: dict, idx: int):
         self.is_finished = data["finished"]
         self.current_player_id = data["current_player_idx"]
         self.winner = data["winner"]
-        self.our_tanks = None # ordered (left to right) dict{id:TankModel}
-        self.tank_cells = self.init_tank_cells(data["vehicles"]) # set of all tank cells for moving logic
-        self.agressive_cells = self.init_tank_cells(data["vehicles"], data["attack_matrix"], idx)
+        self.our_tanks = self.parse_our_tanks(data["vehicles"], idx) # ordered (left to right) dict{id:TankModel}
+        self.tank_cells = self.parse_tank_cells(data["vehicles"]) # set of all tank cells for moving logic
+        self.agressive_cells = self.parse_agressive_cells(data, idx) # set of all tank cells we may attack
 
-        if not (idx is None)
-            self.init_our_tanks(data["vehicles"], idx)
 
     @staticmethod
-    def init_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int: "TankModel"]:
+    def parse_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int: "TankModel"]:
         pass
     @staticmethod
-    def init_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
+    def parse_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
         pass
 
     @staticmethod
-    def init_agressive_cells(vehicles: dict, attack_matrix:  dict, idx: int) -> Optional[set[tuple[int, int, int]]]:
+    def parse_agressive_cells(data:dict, idx: int) -> Optional[set[tuple[int, int, int]]]:
         pass
+
 class GameActions:
     def __init__(self, data: dict):
-    pass
+        pass
 
 class TankModel:
-    def __init__(self, data):
-        self.id =
-        self.hp =
-        self.vehicle_type =
-        self.coordinates =
-        self.shoot_range_bonus =
+    def __init__(self, data: ):
+        self.hp = #int
+        self.vehicle_type = #string
+        self.coordinates = #tuple of ints
+
+# <----------------------- attributes for next stages -------------------
+        self.shoot_range_bonus = None
