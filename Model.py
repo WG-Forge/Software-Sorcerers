@@ -58,21 +58,31 @@ class GameState:
         self.is_finished = data["finished"]
         self.current_player_id = data["current_player_idx"]
         self.winner = data["winner"]
-        self.our_tanks = self.parse_our_tanks(data["vehicles"], idx) # ordered (left to right) dict{id:TankModel}
-        self.tank_cells = self.parse_tank_cells(data["vehicles"]) # set of all tank cells for moving logic
-        self.agressive_cells = self.parse_agressive_cells(data, idx) # set of all tank cells we may attack
+        self.our_tanks = self.parse_our_tanks(data["vehicles"], idx) # ordered (left to right) dict{id:TankModel} (update if we move)
+        self.tank_cells = self.parse_tank_cells(data["vehicles"]) # set of all tank cells for moving logic  (update if you move)
+        self.__agressive_cells = self.parse_agressive_cells(data, idx) # dictioanry cell:hp (update if you shoot enemy vehicle)
 
 
     @staticmethod
     def parse_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int: "TankModel"]:
         pass
+
     @staticmethod
     def parse_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
         pass
 
     @staticmethod
-    def parse_agressive_cells(data:dict, idx: int) -> Optional[set[tuple[int, int, int]]]:
+    def parse_agressive_cells(data:dict, idx: int) -> Optional[dict[tuple[int,int,int] : int]]:
         pass
+
+    def update_data(self, data: tuple[str, dict]):
+        pass
+
+    @property
+    def agressive_cells(self) -> set[int]:
+        return {cell for cell in self.__agressive_cells}
+
+
 
 class GameActions:
     def __init__(self, data: dict):
