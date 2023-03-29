@@ -64,7 +64,7 @@ class GameState:
 
 
     @staticmethod
-    def parse_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int: "TankModel"]:
+    def parse_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int, "TankModel"]:
         pass
 
     @staticmethod
@@ -72,7 +72,7 @@ class GameState:
         return {(record["position"]["x"], record["position"]["y"], record["position"]["z"]) for record in vehicles.values()}
 
     @staticmethod
-    def parse_agressive_cells(data:dict, idx: int) -> Optional[dict[tuple[int, int, int]: int]]:
+    def parse_agressive_cells(data:dict, idx: int) -> Optional[dict[tuple[int, int, int], int]]:
         pass
 
     def update_data(self, data: tuple[str, dict]):
@@ -115,12 +115,31 @@ def main():
         },
         "capture_points": 0,
         "shoot_range_bonus": 0
-    };
+    }
+    vehicle_dict_1 = {
+        "player_id": 1,
+        "vehicle_type": "medium_tank",
+        "health": 2,
+        "spawn_position": {
+            "x": -7,
+            "y": -3,
+            "z": 10
+        },
+        "position": {
+            "x": 5,
+            "y": 5,
+            "z": 5,
+        },
+        "capture_points": 0,
+        "shoot_range_bonus": 0
+    }
 
     # Create a dictionary for the "vehicles" key that contains the vehicle dictionary
     vehicles_dict = {
-        "1": vehicle_dict
-    };
+        "1": vehicle_dict,
+        "2": vehicle_dict_1
+
+    }
 
     # Create the final dictionary
     final_dict = {
