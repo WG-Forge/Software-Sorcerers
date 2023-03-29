@@ -2,18 +2,11 @@ from Client import Dialogue
 from Model import GameState, GameMap, GameActions
 from Vehicle import VehicleFactory
 
-LOGIN_DATA = {
-    "name": "Sorcerer",
-    "password": "",
-    "num_turns": None,
-    "num_players": 1,
-    "is_observer": False
-}
-
 
 class Controller:
-    def __init__(self):
+    def __init__(self, login_data: dict):
         self.idx = None
+        self.login_data = login_data
         self.dialogue = Dialogue()
         self.vehicles_list = None
         self.game_state = None
@@ -45,13 +38,26 @@ class Controller:
 
     def init_vehicles(self):
         self.vehicles_list = [VehicleFactory.build(our_vehicle) for our_vehicle in self.game_state.our_tanks.items]
-        # TODO Game_state must have ordered (left-to right) dict "our_vehicles" with id: TankModel
 
     def init_game(self):
         self.dialogue.start_dialogue()
-        login_answer = self.dialogue.send("LOGIN", LOGIN_DATA)
+        login_answer = self.dialogue.send("LOGIN", self.login_data)
         self.idx = login_answer["idx"]
         self.map = GameMap(self.dialogue.send("MAP"))
         self.refresh_game_state()
-        #
         self.init_vehicles()
+
+
+if __name__ == "__main__":
+    login_data_1 = {
+        "name": "Sorcerer",
+        "password": "",
+        "num_turns": None,
+        "num_players": 1,
+        "is_observer": False
+    }
+    #login_data_2 = ...
+    player_1 = Controller(login_data_1)
+    #player_2 = Controller(login_data_2)
+    player_1.play()
+    #player_2.play()
