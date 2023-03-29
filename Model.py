@@ -3,6 +3,9 @@ from typing import Optional, OrderedDict
 
 import cube_math as cm
 
+DAMAGE = {
+    "medium_tank" : 1
+}
 
 CENTER_POINT = (0, 0, 0)
 
@@ -13,7 +16,6 @@ class GameMap:
         self.name = data["name"]
         self.cells = cm.in_radius(CENTER_POINT, self.size - 1)
         self.obstacles = self.parse_obstacles(data["content"])
-        self.spawn_points = self.parse_spawn_points(data["spawn_points"])
         self.available_cells = self.cells.difference(self.obstacles.union(self.spawn_points))
         self.base = {(base_cell["x"], base_cell["y"], base_cell["z"]) for base_cell in data["content"]["base"]}
 
@@ -31,7 +33,12 @@ class GameMap:
 
     @staticmethod
     def parse_spawn_points(spawn_points: list) -> set[tuple[int, int, int]]:
-        pass  # TODO implement, mb we need to exclude our spawn points from here, to avoid situation when our tank stack between our spawn points
+        pass
+       # TODO implement, mb we need to exclude our spawn points from here, to avoid situation when our tank stack between our spawn points
+
+    def update_available_cells(self, data: dict, idx: int):
+
+        pass
 
 # <----------------------- methods for next stages ---------------------
     @staticmethod
@@ -65,7 +72,14 @@ class GameState:
 
     @staticmethod
     def parse_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int, "TankModel"]:
-        pass
+        our_tanks = {int(key): TankModel((value["health"],
+                                          value["vehicle_type"],
+                                          (value["position"]["x"], value["position"]["y"], value["position"]["z"])
+                                          ))
+                     for key, value in vehicles.items() if value["player_id"] == idx}
+
+        return dict(sorted(our_tanks.items(), key=lambda x: x[1].coordinates[0]))
+
 
     @staticmethod
     def parse_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
@@ -76,10 +90,22 @@ class GameState:
         pass
 
     def update_data(self, data: tuple[str, dict]):
-        pass
+        if data is not None:
+            action = data[0]
+            vehicle_id = data[1]["vehicle_id"]
+            position = (data[1]["target"]["x"], data[1]["target"]["y"], data[1]["target"]["z"])
+            if action == "SHOOT":
+                self.__agressive_cells[position] -= DAMAGE[our_tanks[vehicle_id].vehicle_type]
+                if self.__agressive_cells[position] <= 0:
+                    self.__agressive_cells.pop(position)
+            else:
+                self.tank_cells.discard(self.our_tanks[vehicle_id].coordinates)
+                self.tank_cells.add(position)
+                self.our_tanks[vehicle_id].coordinates = position
+
 
     @property
-    def agressive_cells(self) -> set[tuple[int,int,int]]:
+    def agressive_cells(self) -> set[tuple[int, int, int]]:
         return {cell for cell in self.__agressive_cells}
 
 
@@ -89,7 +115,7 @@ class GameActions:
         pass
 
 class TankModel:
-    def __init__(self, data):
+    def __init__(self, data: tuple[int, str, tuple[int, int, int]]):
         self.hp = data[0]
         self.vehicle_type = data[1]
         self.coordinates = data[2]
@@ -98,18 +124,19 @@ class TankModel:
         self.shoot_range_bonus = None
 
 
-def main():
+
+if __name__ == "__main__":
     vehicle_dict = {
         "player_id": 1,
         "vehicle_type": "medium_tank",
         "health": 2,
         "spawn_position": {
-            "x": -7,
+            "x": 4,
             "y": -3,
             "z": 10
         },
         "position": {
-            "x": -7,
+            "x": 3,
             "y": -3,
             "z": 10
         },
@@ -126,7 +153,24 @@ def main():
             "z": 10
         },
         "position": {
-            "x": 5,
+            "x": 4,
+            "y": 5,
+            "z": 5,
+        },
+        "capture_points": 0,
+        "shoot_range_bonus": 0
+    }
+    vehicle_dict_2 = {
+        "player_id": 5,
+        "vehicle_type": "medium_tank",
+        "health": 17,
+        "spawn_position": {
+            "x": -7,
+            "y": -3,
+            "z": 10
+        },
+        "position": {
+            "x": 3,
             "y": 5,
             "z": 5,
         },
@@ -137,16 +181,16 @@ def main():
     # Create a dictionary for the "vehicles" key that contains the vehicle dictionary
     vehicles_dict = {
         "1": vehicle_dict,
-        "2": vehicle_dict_1
+        "2": vehicle_dict_1,
+        "3": vehicle_dict_2
 
     }
 
-    # Create the final dictionary
-    final_dict = {
-        "vehicles": vehicles_dict
-    }
 
+    print("Test parse_tank_cells: ")
     print(GameState.parse_tank_cells(vehicles_dict))
 
-if __name__ == "__main__":
-    main()
+    print("Test parse_our_tanks:")
+    our_tanks = GameState.parse_our_tanks(vehicles_dict, 1);
+    for tank in our_tanks.values():
+        print(tank.hp, " ", tank.vehicle_type, " ", tank.coordinates)
