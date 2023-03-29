@@ -69,17 +69,17 @@ class GameState:
 
     @staticmethod
     def parse_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
-        pass
+        return {(record["position"]["x"], record["position"]["y"], record["position"]["z"]) for record in vehicles.values()}
 
     @staticmethod
-    def parse_agressive_cells(data:dict, idx: int) -> Optional[dict[tuple[int,int,int] : int]]:
+    def parse_agressive_cells(data:dict, idx: int) -> Optional[dict[tuple[int, int, int]: int]]:
         pass
 
     def update_data(self, data: tuple[str, dict]):
         pass
 
     @property
-    def agressive_cells(self) -> set[int]:
+    def agressive_cells(self) -> set[tuple[int,int,int]]:
         return {cell for cell in self.__agressive_cells}
 
 
@@ -89,10 +89,45 @@ class GameActions:
         pass
 
 class TankModel:
-    def __init__(self, data: ):
-        self.hp = #int
-        self.vehicle_type = #string
-        self.coordinates = #tuple of ints
+    def __init__(self, data):
+        self.hp = data[0]
+        self.vehicle_type = data[1]
+        self.coordinates = data[2]
 
 # <----------------------- attributes for next stages -------------------
         self.shoot_range_bonus = None
+
+
+def main():
+    vehicle_dict = {
+        "player_id": 1,
+        "vehicle_type": "medium_tank",
+        "health": 2,
+        "spawn_position": {
+            "x": -7,
+            "y": -3,
+            "z": 10
+        },
+        "position": {
+            "x": -7,
+            "y": -3,
+            "z": 10
+        },
+        "capture_points": 0,
+        "shoot_range_bonus": 0
+    };
+
+    # Create a dictionary for the "vehicles" key that contains the vehicle dictionary
+    vehicles_dict = {
+        "1": vehicle_dict
+    };
+
+    # Create the final dictionary
+    final_dict = {
+        "vehicles": vehicles_dict
+    }
+
+    print(GameState.parse_tank_cells(vehicles_dict))
+
+if __name__ == "__main__":
+    main()
