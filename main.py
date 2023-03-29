@@ -22,18 +22,15 @@ class Controller:
 
     def play(self):
         self.init_game()
-
 # <---------------------- main loop ---------------------
         while not self.game_state.is_finished:
             while self.game_state.current_player_id != self.idx:
                 self.refresh_game_state()
-            # self.refresh_game_actions()
             for vehicle in self.vehicles_list:
-                if vehicle.id in self.game_state.our_vehicles:
-                    vehicle_turn = vehicle.make_turn(self.game_state, self.map, self.game_actions)
-                    if not (vehicle_turn is None):
-                        self.dialogue.send(vehicle_turn)
-                        self.refresh_game_state()
+                vehicle_turn = vehicle.make_turn(self.game_state, self.map, self.game_actions)
+                if not (vehicle_turn is None):
+                    self.game_state.update_data(vehicle_turn)
+                    self.dialogue.send(vehicle_turn)
             self.dialogue.send("TURN")
 # <-------------------- end of main loop ----------------
 
@@ -47,7 +44,7 @@ class Controller:
         self.game_actions = GameActions(self.dialogue.send("ACTIONS"))
 
     def init_vehicles(self):
-        self.vehicles_list = [VehicleFactory.build(our_vehicle) for our_vehicle in self.game_state.our_vehicles.items]
+        self.vehicles_list = [VehicleFactory.build(our_vehicle) for our_vehicle in self.game_state.our_tanks.items]
         # TODO Game_state must have ordered (left-to right) dict "our_vehicles" with id: TankModel
 
     def init_game(self):
@@ -56,4 +53,5 @@ class Controller:
         self.idx = login_answer["idx"]
         self.map = GameMap(self.dialogue.send("MAP"))
         self.refresh_game_state()
+        #
         self.init_vehicles()
