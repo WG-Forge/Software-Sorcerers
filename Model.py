@@ -2,19 +2,14 @@ from typing import Optional, OrderedDict
 
 
 import cube_math as cm
-
-DAMAGE = {
-    "medium_tank" : 1
-}
-
-CENTER_POINT = (0, 0, 0)
+import config as cf
 
 
 class GameMap:
-    def __init__(self, data: dict):
+    def __init__(self, data: dict, game_state: "GameState"):
         self.size = data["size"]
         self.name = data["name"]
-        self.cells = cm.in_radius(CENTER_POINT, self.size - 1)
+        self.cells = cm.in_radius(cf.CENTER_POINT, self.size - 1)
         self.obstacles = self.parse_obstacles(data["content"])
         self.available_cells = self.cells.difference(self.obstacles.union(self.spawn_points))
         self.base = {(base_cell["x"], base_cell["y"], base_cell["z"]) for base_cell in data["content"]["base"]}
@@ -67,7 +62,7 @@ class GameState:
         self.winner = data["winner"]
         self.our_tanks = self.parse_our_tanks(data["vehicles"], idx) # ordered (left to right) dict{id:TankModel} (update if we move)
         self.tank_cells = self.parse_tank_cells(data["vehicles"]) # set of all tank cells for moving logic  (update if you move)
-        self.__agressive_cells = self.parse_agressive_cells(data, idx) # dictioanry cell:hp (update if you shoot enemy vehicle)
+        self.__agressive_cells = self.parse_agressive_cells(data, idx) # dictioanry cell:hp(update if you shoot enemy vehicle)
 
 
     @staticmethod
@@ -95,7 +90,7 @@ class GameState:
             vehicle_id = data[1]["vehicle_id"]
             position = (data[1]["target"]["x"], data[1]["target"]["y"], data[1]["target"]["z"])
             if action == "SHOOT":
-                self.__agressive_cells[position] -= DAMAGE[our_tanks[vehicle_id].vehicle_type]
+                self.__agressive_cells[position] -= cf.DAMAGE[our_tanks[vehicle_id].vehicle_type]
                 if self.__agressive_cells[position] <= 0:
                     self.__agressive_cells.pop(position)
             else:
@@ -108,20 +103,23 @@ class GameState:
     def agressive_cells(self) -> set[tuple[int, int, int]]:
         return {cell for cell in self.__agressive_cells}
 
+    def our_tanks_cells(self) -> set[tuple[int, int, int]]:
+        pass
+
 
 
 class GameActions:
     def __init__(self, data: dict):
         pass
 
+
 class TankModel:
     def __init__(self, data: tuple[int, str, tuple[int, int, int]]):
         self.hp = data[0]
         self.vehicle_type = data[1]
         self.coordinates = data[2]
-
 # <----------------------- attributes for next stages -------------------
-        self.shoot_range_bonus = None
+        self.shoot_range_bonus = 0
 
 
 

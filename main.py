@@ -43,8 +43,8 @@ class Controller:
         self.dialogue.start_dialogue()
         login_answer = self.dialogue.send("LOGIN", self.login_data)
         self.idx = login_answer["idx"]
-        self.map = GameMap(self.dialogue.send("MAP"))
         self.refresh_game_state()
+        self.map = GameMap(self.dialogue.send("MAP"), self.game_state)
         self.init_vehicles()
 
 

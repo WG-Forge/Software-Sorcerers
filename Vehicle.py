@@ -1,12 +1,9 @@
 from typing import Optional, Union
 
-
+import config as cf
 import cube_math as cm
 from Model import TankModel, GameState, GameMap
 
-MT_MAX_RANGE = 2
-MT_MIN_RANGE = 1
-MT_SPEED_POINTS = 2
 
 
 class VehicleFactory:
@@ -20,24 +17,29 @@ class VehicleFactory:
         match spec[-1].vehicle_type:
             case "medium_tank":
                 return MediumTank(spec)
-            case "light_tank":
-                return LightTank(spec)
-            case "heavy_tank":
-                return HeavyTank(spec)
-            case "at_spg":
-                return AtSpg(spec)
-            case "spg":
-                return Spg(spec)
+
+            # case "light_tank":
+            #     return LightTank(spec)
+            # case "heavy_tank":
+            #     return HeavyTank(spec)
+            # case "at_spg":
+            #     return AtSpg(spec)
+            # case "spg":
+            #     return Spg(spec)
+
+
 
 
 class Vehicle:
-    def __init__(self,  spec: tuple[int, "TankModel"], sp: int, max_range: int, min_range: int):
+    def __init__(self,  spec: tuple[int, "TankModel"]):
         self.id = spec[0]
         self.model = spec[-1]
-        self.sp = sp
-        self.max_shoot_range = max_range
-        self.min_range = min_range
+        self.sp = cf.SPEED_POINTS[self.model.vehicle_type]
+        self.max_shoot_range = cf.MAX_RANGE[self.model.vehicle_type]
+        self.min_range = cf.MIN_RANGE[self.model.vehicle_type]
         self.priority = None
+
+
 
     def refresh_model(self, state: "GameState") -> None:
         self.model = state.our_tanks[self.id]
@@ -58,6 +60,7 @@ class Vehicle:
     def choose_target(self, targets: set[tuple[int, int, int]], state: "GameState", map_: "GameMap")\
             -> tuple[int, int, int]:
         return targets.pop()  # TODO here some target choosing logic, targets are already shootable:)
+
 
     def make_turn(self, state, map_) -> Optional[tuple[str, dict]]:
         self.refresh_model(state)
@@ -95,9 +98,10 @@ class Vehicle:
             return self.move(step_cell)
 
 
+
 class MediumTank(Vehicle):
     def __init__(self, spec: tuple[int, "TankModel"]):
-        super().__init__(spec, MT_SPEED_POINTS, MT_MAX_RANGE, MT_MIN_RANGE)
+        super().__init__(spec)
 
 # <------------- End of stage 1
 
