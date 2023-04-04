@@ -6,7 +6,7 @@ import config as cf
 
 
 class GameMap:
-    def __init__(self, data: dict, game_state: "GameState"):
+    def __init__(self, data: dict):
         self.size = data["size"]
         self.name = data["name"]
         self.cells = cm.in_radius(cf.CENTER_POINT, self.size - 1)
@@ -103,7 +103,7 @@ class GameState:
     def agressive_cells(self) -> set[tuple[int, int, int]]:
         return {cell for cell in self.__agressive_cells}
 
-    def our_tanks_cells(self) -> set[tuple[int, int, int]]:
+    def get_our_tanks_cells(self) -> set[tuple[int, int, int]]:
         pass
 
 
@@ -120,8 +120,6 @@ class TankModel:
         self.coordinates = data[2]
 # <----------------------- attributes for next stages -------------------
         self.shoot_range_bonus = 0
-
-
 
 if __name__ == "__main__":
     vehicle_dict = {

@@ -2,9 +2,8 @@ import socket
 import json
 from typing import Optional
 
-SERVER = 'wgforge-srv.wargaming.net'
-PORT = 443
-BUFFER_SIZE = 8192
+import config as cf
+
 
 
 class Client:
@@ -12,7 +11,7 @@ class Client:
         self.sock = socket.socket()
 
     def connect(self):
-        self.sock.connect((SERVER, PORT))
+        self.sock.connect((cf.SERVER, cf.PORT))
 
     def disconnect(self):
         self.sock.close()
@@ -21,7 +20,7 @@ class Client:
         self.sock.send(data)
 
     def receive(self) -> bytes:
-        response = self.sock.recv(BUFFER_SIZE)
+        response = self.sock.recv(cf.BUFFER_SIZE)
         return response
 
 
@@ -68,7 +67,7 @@ class Receiver:
         if status != "OKEY":
             raise RuntimeError(f"{status}")
         msg_length = int.from_bytes(answer[4:8], byteorder="little")
-        if msg_length > BUFFER_SIZE - 8:
+        if msg_length > cf.BUFFER_SIZE - 8:
             raise BufferError(f"Low buffer size to handle {msg_length}")
         json_part = (answer[8:]).decode("UTF-8")
         if json_part:

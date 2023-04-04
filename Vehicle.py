@@ -5,7 +5,6 @@ import cube_math as cm
 from Model import TankModel, GameState, GameMap
 
 
-
 class VehicleFactory:
     @staticmethod
     def build(spec: tuple[int, "TankModel"]) -> "Vehicle":
@@ -17,17 +16,14 @@ class VehicleFactory:
         match spec[-1].vehicle_type:
             case "medium_tank":
                 return MediumTank(spec)
-
-            # case "light_tank":
-            #     return LightTank(spec)
-            # case "heavy_tank":
-            #     return HeavyTank(spec)
-            # case "at_spg":
-            #     return AtSpg(spec)
-            # case "spg":
-            #     return Spg(spec)
-
-
+            case "light_tank":
+                return LightTank(spec)
+            case "heavy_tank":
+                return HeavyTank(spec)
+            case "at_spg":
+                return AtSpg(spec)
+            case "spg":
+                return Spg(spec)
 
 
 class Vehicle:
@@ -38,8 +34,6 @@ class Vehicle:
         self.max_shoot_range = cf.MAX_RANGE[self.model.vehicle_type]
         self.min_range = cf.MIN_RANGE[self.model.vehicle_type]
         self.priority = None
-
-
 
     def refresh_model(self, state: "GameState") -> None:
         self.model = state.our_tanks[self.id]
@@ -61,8 +55,7 @@ class Vehicle:
             -> tuple[int, int, int]:
         return targets.pop()  # TODO here some target choosing logic, targets are already shootable:)
 
-
-    def make_turn(self, state, map_) -> Optional[tuple[str, dict]]:
+    def make_turn(self, state: "GameState", map_: "GameMap") -> Optional[tuple[str, dict]]:
         self.refresh_model(state)
         targets = self.targets_in_range(state)
         if targets:
@@ -72,19 +65,19 @@ class Vehicle:
         if self.priority():
             return self.move_to_priority(map_, state)
 
-    def set_priority(self, state, map_):
-        is_in_base = self.model.coordinates in map_.base_cells
+    def set_priority(self, state: "GameState", map_: "GameMap") -> None:
+        is_in_base = self.model.coordinates in map_.base
         if is_in_base:
             self.priority = None
-        our_tanks_in_base = state.our_tanks_cells.intersect(map_.base_cells)
-        empty_base_cells = map_.base_cells.difference(state.tank_cells)
-        if empty_base_cells and our_tanks_in_base < 2:
+        our_tanks_in_base = state.get_our_tanks_cells().intersection(map_.base)
+        empty_base_cells = map_.base.difference(state.tank_cells)
+        if empty_base_cells and len(our_tanks_in_base) < 2:
             self.priority = empty_base_cells.pop(0)
             # TODO: all strategy is here, should set priority (one free cell or None), we can overload it for different types of vehicles
 
-    def move_to_priority(self, map_, state):
+    def move_to_priority(self, map_: "GameMap", state: "GameState") -> Optional[tuple[str, dict]]:
         step_cell = None
-        path_to_priority = cm.a_star(map_.available_calls, self.model.coordinates, self.priority)
+        path_to_priority = cm.a_star(map_.available_cells, self.model.coordinates, self.priority)
         speed_points = self.sp
         if speed_points >= len(path_to_priority):
             step_cell = path_to_priority[-1]
@@ -98,25 +91,26 @@ class Vehicle:
             return self.move(step_cell)
 
 
-
 class MediumTank(Vehicle):
     def __init__(self, spec: tuple[int, "TankModel"]):
         super().__init__(spec)
 
-# <------------- End of stage 1
-
 
 class LightTank(Vehicle):
-    pass
+    def __init__(self, spec: tuple[int, "TankModel"]):
+        super().__init__(spec)
 
 
 class HeavyTank(Vehicle):
-    pass
+    def __init__(self, spec: tuple[int, "TankModel"]):
+        super().__init__(spec)
 
 
 class AtSpg(Vehicle):
-    pass
+    def __init__(self, spec: tuple[int, "TankModel"]):
+        super().__init__(spec)
 
 
 class Spg(Vehicle):
-    pass
+    def __init__(self, spec: tuple[int, "TankModel"]):
+        super().__init__(spec)
