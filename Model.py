@@ -11,6 +11,7 @@ class GameMap:
         self.name = data["name"]
         self.cells = cm.in_radius(cf.CENTER_POINT, self.size - 1)
         self.obstacles = self.parse_obstacles(data["content"])
+        self.spawn_points = self.parse_spawn_points(data["spawn_points"])
         self.available_cells = self.cells.difference(self.obstacles.union(self.spawn_points))
         self.base = {(base_cell["x"], base_cell["y"], base_cell["z"]) for base_cell in data["content"]["base"]}
 
@@ -28,12 +29,12 @@ class GameMap:
 
     @staticmethod
     def parse_spawn_points(spawn_points: list) -> set[tuple[int, int, int]]:
-        pass
-       # TODO implement, mb we need to exclude our spawn points from here, to avoid situation when our tank stack between our spawn points
-
-    def update_available_cells(self, data: dict, idx: int):
-
-        pass
+        spawn_points_set = set()
+        for player_vehicles in spawn_points:
+            for list_of_spawn_points in player_vehicles.values():
+                for point in list_of_spawn_points:
+                    spawn_points_set.add((point["x"], point["y"], point["z"]))
+        return spawn_points_set
 
 # <----------------------- methods for next stages ---------------------
     @staticmethod
@@ -62,7 +63,7 @@ class GameState:
         self.winner = data["winner"]
         self.our_tanks = self.parse_our_tanks(data["vehicles"], idx) # ordered (left to right) dict{id:TankModel} (update if we move)
         self.tank_cells = self.parse_tank_cells(data["vehicles"]) # set of all tank cells for moving logic  (update if you move)
-        self.__agressive_cells = self.parse_agressive_cells(data, idx) # dictioanry cell:hp(update if you shoot enemy vehicle)
+        self.agressive_cells = self.parse_agressive_cells(data, idx) # dictioanry cell:hp(update if you shoot enemy vehicle)
 
 
     @staticmethod
@@ -190,3 +191,19 @@ if __name__ == "__main__":
     our_tanks = GameState.parse_our_tanks(vehicles_dict, 1);
     for tank in our_tanks.values():
         print(tank.hp, " ", tank.vehicle_type, " ", tank.coordinates)
+
+    print(GameMap.parse_spawn_points([{'at_spg': [{'x': -3, 'y': -7, 'z': 10}],
+                                       'heavy_tank': [{'x': -5, 'y': -5, 'z': 10}],
+                                       'light_tank': [{'x': -6, 'y': -4, 'z': 10}],
+                                       'medium_tank': [{'x': -4, 'y': -6, 'z': 10}],
+                                       'spg': [{'x': -7, 'y': -3, 'z': 10}]},
+                                      {'at_spg': [{'x': -7, 'y': 10, 'z': -3}],
+                                       'heavy_tank': [{'x': -5, 'y': 10, 'z': -5}],
+                                       'light_tank': [{'x': -4, 'y': 10, 'z': -6}],
+                                       'medium_tank': [{'x': -6, 'y': 10, 'z': -4}],
+                                       'spg': [{'x': -3, 'y': 10, 'z': -7}]},
+                                      {'at_spg': [{'x': 10, 'y': -3, 'z': -7}],
+                                       'heavy_tank': [{'x': 10, 'y': -5, 'z': -5}],
+                                       'light_tank': [{'x': 10, 'y': -6, 'z': -4}],
+                                       'medium_tank': [{'x': 10, 'y': -4, 'z': -6}],
+                                       'spg': [{'x': 10, 'y': -7, 'z': -3}]}]))
