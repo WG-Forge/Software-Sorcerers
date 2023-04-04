@@ -99,6 +99,8 @@ if __name__ == "__main__":
     print(answer)
     answer = dialogue.send("MAP")
     print(answer)
+    answer = dialogue.send("GAME_STATE")
+    print(answer)
     answer = dialogue.send("LOGOUT")
     print(answer)
     dialogue.end_dialogue()
