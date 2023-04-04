@@ -1,10 +1,9 @@
 import socket
 import json
+import time
 from typing import Optional
 
 import config as cf
-
-
 
 class Client:
     def __init__(self):
@@ -69,9 +68,9 @@ class Receiver:
         msg_length = int.from_bytes(answer[4:8], byteorder="little")
         if msg_length > cf.BUFFER_SIZE - 8:
             raise BufferError(f"Low buffer size to handle {msg_length}")
-        json_part = (answer[8:]).decode("UTF-8")
+        json_part = (answer[8:])
         if json_part:
-            return json.loads(json_part)
+            return json.loads(json_part.decode("UTF-8"))
         return None
 
 
@@ -89,6 +88,7 @@ class Dialogue:
 
     def send(self, command: str,  data: Optional[dict] = None) -> dict:
         self.client.send(Transmitter.translate(command, data))
+        time.sleep(0.1)
         answer = Receiver.translate(self.client.receive())
 # <-------------logging, uncomment for debug -------
         with open("log.txt", "a") as f:

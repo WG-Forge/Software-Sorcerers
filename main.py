@@ -1,3 +1,6 @@
+from threading import Thread
+from time import sleep
+
 from Client import Dialogue
 from Model import GameState, GameMap, GameActions
 from Vehicle import VehicleFactory
@@ -19,6 +22,7 @@ class Controller:
         while not self.game_state.is_finished:
             while self.game_state.current_player_id != self.idx:
                 self.refresh_game_state()
+                sleep(0.05)
             for vehicle in self.vehicles_list:
                 vehicle_turn = vehicle.make_turn(self.game_state, self.map)
                 if not (vehicle_turn is None):
@@ -52,19 +56,23 @@ class Controller:
 if __name__ == "__main__":
     login_data_1 = {
         "name": "Sorcerer",
-        "password": "12",
+        "password": "123",
+        "game": "mygame1",
         "num_turns": None,
         "num_players": 1,
         "is_observer": False
     }
-    # login_data_2 = {
-    #     "name": "Sorcerer2",
-    #     "password": "12",
-    #     "num_turns": None,
-    #     "num_players": 2,
-    #     "is_observer": False
-    # }
+    login_data_2 = {
+        "name": "Sorcerer2",
+        "password": "123",
+        "game": "mygame1",
+        "num_turns": None,
+        "num_players": 2,
+        "is_observer": False
+    }
     player_1 = Controller(login_data_1)
-    #player_2 = Controller(login_data_2)
-    player_1.play()
-    #player_2.play()
+    player_2 = Controller(login_data_2)
+    t1 = Thread(target=player_1.play)
+    t2 = Thread(target=player_2.play)
+    t1.start()
+    #t2.start()
