@@ -43,7 +43,7 @@ class Vehicle:
                                  + self.model.shoot_range_bonus)
 
     def targets_in_range(self, state: "GameState") -> Union[set, set[tuple[int, int, int]]]:
-        return self.cells_in_range().intersection(state.agressive_cells)
+        return self.cells_in_range().intersection(state.get_agressive_cells())
 
     def shoot(self, target: tuple[int, int, int]) -> tuple[str, dict]:
         return "SHOOT", {"vehicle_id": self.id, "target": {"x": target[0], "y": target[1], "z": target[2]}}
@@ -62,7 +62,7 @@ class Vehicle:
             target = self.choose_target(targets, state, map_)
             return self.shoot(target)
         self.set_priority(state, map_)
-        if self.priority():
+        if self.priority:
             return self.move_to_priority(map_, state)
 
     def set_priority(self, state: "GameState", map_: "GameMap") -> None:
@@ -72,7 +72,7 @@ class Vehicle:
         our_tanks_in_base = state.get_our_tanks_cells().intersection(map_.base)
         empty_base_cells = map_.base.difference(state.tank_cells)
         if empty_base_cells and len(our_tanks_in_base) < 2:
-            self.priority = empty_base_cells.pop(0)
+            self.priority = empty_base_cells.pop()
             # TODO: all strategy is here, should set priority (one free cell or None), we can overload it for different types of vehicles
 
     def move_to_priority(self, map_: "GameMap", state: "GameState") -> Optional[tuple[str, dict]]:

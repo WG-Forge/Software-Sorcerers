@@ -9,7 +9,7 @@ DAMAGE = {
 
 MAX_RANGE = {
     "medium_tank": 2,
-    "at_spg": None,
+    "at_spg": 3,
     "heavy_tank": 2,
     "light_tank": 2,
     "spg": 3
@@ -18,7 +18,7 @@ MAX_RANGE = {
 
 MIN_RANGE = {
     "medium_tank": 1,
-    "at_spg": None,
+    "at_spg": 0,
     "heavy_tank": 0,
     "light_tank": 1,
     "spg": 2

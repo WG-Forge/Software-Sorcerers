@@ -1,4 +1,5 @@
 from typing import Optional, OrderedDict
+import collections as coll
 
 
 import cube_math as cm
@@ -63,7 +64,7 @@ class GameState:
         self.winner = data["winner"]
         self.our_tanks = self.parse_our_tanks(data["vehicles"], idx) # ordered (left to right) dict{id:TankModel} (update if we move)
         self.tank_cells = self.parse_tank_cells(data["vehicles"]) # set of all tank cells for moving logic  (update if you move)
-        self.agressive_cells = self.parse_agressive_cells(data, idx) # dictioanry cell:hp(update if you shoot enemy vehicle)
+        self.agressive_tanks = self.parse_agressive_tanks(data, idx) # dictioanry cell:hp(update if you shoot enemy vehicle)
 
 
     @staticmethod
@@ -74,7 +75,7 @@ class GameState:
                                           ))
                      for key, value in vehicles.items() if value["player_id"] == idx}
 
-        return dict(sorted(our_tanks.items(), key=lambda x: x[1].coordinates[0]))
+        return coll.OrderedDict(sorted(our_tanks.items(), key=lambda x: x[1].coordinates[0]))
 
 
     @staticmethod
@@ -82,30 +83,30 @@ class GameState:
         return {(record["position"]["x"], record["position"]["y"], record["position"]["z"]) for record in vehicles.values()}
 
     @staticmethod
-    def parse_agressive_cells(data:dict, idx: int) -> Optional[dict[tuple[int, int, int], int]]:
+    def parse_agressive_tanks(data:dict, idx: int) -> Optional[dict[tuple[int, int, int], int]]:
         pass
 
     def update_data(self, data: tuple[str, dict]):
-        if data is not None:
+        if data:
             action = data[0]
             vehicle_id = data[1]["vehicle_id"]
             position = (data[1]["target"]["x"], data[1]["target"]["y"], data[1]["target"]["z"])
             if action == "SHOOT":
-                self.__agressive_cells[position] -= cf.DAMAGE[our_tanks[vehicle_id].vehicle_type]
-                if self.__agressive_cells[position] <= 0:
-                    self.__agressive_cells.pop(position)
+                self.agressive_tanks[position] -= cf.DAMAGE[our_tanks[vehicle_id].vehicle_type]
+                if self.agressive_tanks[position] <= 0:
+                    self.agressive_tanks.pop(position)
             else:
                 self.tank_cells.discard(self.our_tanks[vehicle_id].coordinates)
                 self.tank_cells.add(position)
                 self.our_tanks[vehicle_id].coordinates = position
 
-
-    @property
-    def agressive_cells(self) -> set[tuple[int, int, int]]:
-        return {cell for cell in self.__agressive_cells}
+    def get_agressive_cells(self) -> set[tuple[int, int, int]]:
+        if self.agressive_tanks:
+            return {cell for cell in self.agressive_tanks}
+        return {}
 
     def get_our_tanks_cells(self) -> set[tuple[int, int, int]]:
-        pass
+        return {vehicle.coordinates for vehicle in self.our_tanks.values()}
 
 
 

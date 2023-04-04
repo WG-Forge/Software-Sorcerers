@@ -89,7 +89,13 @@ class Dialogue:
 
     def send(self, command: str,  data: Optional[dict] = None) -> dict:
         self.client.send(Transmitter.translate(command, data))
-        return Receiver.translate(self.client.receive())
+        answer = Receiver.translate(self.client.receive())
+# <-------------logging, uncomment for debug -------
+        with open("log.txt", "a") as f:
+            f.writelines(f"{command}, {data}\n")
+            f.write(f"{answer}\n")
+# <-------------------end of logging ---------------
+        return answer
 
 
 if __name__ == "__main__":
