@@ -1,6 +1,6 @@
 # Software-Sorcerers
-## It's a pity but only one member left in our team
-https://github.com/DimonDimskiy
+It's a pity but only one member left in our team
+https://github.com/DimonDimskiy - Dmitrii Skrypnik
 ## How to run
 There are no libraries used, except standard Python libraries, app tested on Python 3.11.
 To run the app you sould run main.py, login data also in main.py. There is also posibility to run two bots in different threads
