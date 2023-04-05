@@ -59,21 +59,22 @@ if __name__ == "__main__":
         "password": "123",
         "game": "mygame124",
         "num_turns": 45,
-        "num_players": 2,  # change it if you want to run two bots
+        "num_players": 1,  # change it if you want to run two bots
         "is_observer": False
     }
     player_1 = Controller(login_data_1)
     t1 = Thread(target=player_1.play)
     t1.start()
+
 # <----------- if you want to test game with two bots uncomment cobe below, and dont forgot to change num of players
-    login_data_2 = {
-        "name": "Sorcerer2",
-        "password": "123",
-        "game": "mygame124",
-        "num_turns": 45,
-        "num_players": 2,
-        "is_observer": False
-    }
-    player_2 = Controller(login_data_2)
-    t2 = Thread(target=player_2.play)
-    t2.start()
+#     login_data_2 = {
+#         "name": "Sorcerer2",
+#         "password": "123",
+#         "game": "mygame124",
+#         "num_turns": 45,
+#         "num_players": 2,
+#         "is_observer": False
+#     }
+#     player_2 = Controller(login_data_2)
+#     t2 = Thread(target=player_2.play)
+#     t2.start()
