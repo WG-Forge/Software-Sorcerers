@@ -15,7 +15,6 @@ MAX_RANGE = {
     "spg": 3
 }
 
-
 MIN_RANGE = {
     "medium_tank": 1,
     "at_spg": 0,
@@ -39,4 +38,24 @@ CENTER_POINT = (0, 0, 0)  # in case we will have other coordinate in central poi
 SERVER = 'wgforge-srv.wargaming.net'
 PORT = 443
 BUFFER_SIZE = 16384
+
+STATUS_CODE = {
+        0: "OKEY",
+        1: "BAD_COMMAND",
+        2: "ACCESS_DENIED",
+        3: "INAPPROPRIATE_GAME_STATE",
+        4: "TIMEOUT",
+        500: "INTERNAL_SERVER_ERROR"
+    }
+ACTIONS = {
+        "LOGIN": 1,
+        "LOGOUT": 2,
+        "MAP": 3,
+        "GAME_STATE": 4,
+        "GAME_ACTIONS": 5,
+        "TURN": 6,
+        "CHAT": 100,
+        "MOVE": 101,
+        "SHOOT": 102,
+    }
 # <----------- end connection

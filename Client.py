@@ -1,12 +1,12 @@
 import socket
 import json
-import time
 from typing import Optional
 
 import config as cf
 
 
 class Client:
+
     def __init__(self):
         self.sock = socket.socket()
 
@@ -20,59 +20,18 @@ class Client:
         self.sock.send(data)
 
     def receive(self) -> bytes:
-        response = self.sock.recv(cf.BUFFER_SIZE)
-        return response
-
-
-class Transmitter:
-    ACTIONS = {
-        "LOGIN": 1,
-        "LOGOUT": 2,
-        "MAP": 3,
-        "GAME_STATE": 4,
-        "GAME_ACTIONS": 5,
-        "TURN": 6,
-        "CHAT": 100,
-        "MOVE": 101,
-        "SHOOT": 102,
-    }
-
-    @classmethod
-    def translate(cls, action: str, data: Optional[dict] = None) -> bytes:
-        b_action = cls.ACTIONS[action].to_bytes(4, byteorder="little")
-        if data is None:
-            json_string = ""
-        else:
-            json_string = json.dumps(data)
-
-        b_length = len(json_string).to_bytes(4, byteorder="little")
-        message = b_action + b_length + json_string.encode("UTF-8")
-
-        return message
-
-
-class Receiver:
-    status_code = {
-        0: "OKEY",
-        1: "BAD_COMMAND",
-        2: "ACCESS_DENIED",
-        3: "INAPPROPRIATE_GAME_STATE",
-        4: "TIMEOUT",
-        500: "INTERNAL_SERVER_ERROR"
-    }
-
-    @classmethod
-    def translate(cls, answer: bytes) -> Optional[dict]:
-        status = cls.status_code[int.from_bytes(answer[0:4], byteorder="little")]
-        if status != "OKEY":
-            raise RuntimeError(f"{status}")
-        msg_length = int.from_bytes(answer[4:8], byteorder="little")
-        if msg_length > cf.BUFFER_SIZE - 8:
-            raise BufferError(f"Low buffer size to handle {msg_length}")
-        json_part = (answer[8:])
-        if json_part:
-            return json.loads(json_part.decode("UTF-8"))
-        return None
+        chunks = []
+        init_read = self.sock.recv(8)
+        status_code = int.from_bytes(init_read[0:4], byteorder="little")
+        if status_code != 0:
+            raise RuntimeError(f"{cf.SPEED_POINTS[status_code]}")
+        msg_len = int.from_bytes(init_read[4:8], byteorder="little")
+        bytes_recd = 0
+        while bytes_recd < msg_len:
+            chunk = self.sock.recv(min(msg_len - bytes_recd, cf.BUFFER_SIZE))
+            chunks.append(chunk)
+            bytes_recd = bytes_recd + len(chunk)
+        return b''.join(chunks)
 
 
 class Dialogue:
@@ -87,18 +46,31 @@ class Dialogue:
     def end_dialogue(self):
         self.client.disconnect()
 
-    def send(self, command: str,  data: Optional[dict] = None) -> dict:
-        self.client.send(Transmitter.translate(command, data))
-        time.sleep(0.2)  # TODO костыль, нужен асинхронный сокет
+    def send(self, command: str,  data: Optional[dict] = None) -> Optional[dict]:
+        self.client.send(self.translate(command, data))
         response = self.client.receive()
-        answer = Receiver.translate(response)
+        answer = None
+        if response:
+            answer = json.loads(response.decode("UTF-8"))
 
 # <-------------logging, uncomment for debug -------
 #         with open("log.txt", "a") as f:
 #             f.writelines(f"{command}, {data}\n")
 #             f.write(f"{response}\n")
 # <-------------------end of logging ---------------
+
         return answer
+
+    @staticmethod
+    def translate(action: str, data: Optional[dict] = None) -> bytes:
+        b_action = cf.ACTIONS[action].to_bytes(4, byteorder="little")
+        if data is None:
+            json_string = ""
+        else:
+            json_string = json.dumps(data)
+        b_length = len(json_string).to_bytes(4, byteorder="little")
+        message = b_action + b_length + json_string.encode("UTF-8")
+        return message
 
 
 if __name__ == "__main__":
