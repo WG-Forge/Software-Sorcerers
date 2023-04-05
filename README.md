@@ -6,7 +6,7 @@ There are no libraries used, except standard Python libraries, app tested on Pyt
 To run the app you sould run main.py, login data also in main.py. There is also posibility to run two bots in different threads
 ## Module description
 **Client.py** contains next classes to client-server interact:
-- Client - creates socket with given parameters, sends binary requests, receives binary responces //requires implementation of async socket, i'll figure that out.
+- Client - creates socket with given parameters, sends binary requests, receives binary responces
 - Transmitter - encodes given command and Python objects into binary request
 - Receiver - decodes given binary response into Python objects !TODO add handling of server errors and low bufferiize error
 - Dialogue - instantiates Client object, interacts with server through it using Transmitter and Receiver, receives commands, and Python objects, returns Python objects
