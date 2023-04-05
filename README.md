@@ -7,9 +7,7 @@ To run the app you sould run main.py, login data also in main.py. There is also 
 ## Module description
 **Client.py** contains next classes to client-server interact:
 - Client - creates socket with given parameters, sends binary requests, receives binary responces
-- Transmitter - encodes given command and Python objects into binary request
-- Receiver - decodes given binary response into Python objects !TODO add handling of server errors and low bufferiize error
-- Dialogue - instantiates Client object, interacts with server through it using Transmitter and Receiver, receives commands, and Python objects, returns Python objects
+- Dialogue - instantiates Client object, interacts with server through it, receives commands, and Python objects, translates it into binnary, returns Python objects
 
 **main.py** 
 - contains Controller with main game loop
