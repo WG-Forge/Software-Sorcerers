@@ -5,6 +5,7 @@ from typing import Optional
 
 import config as cf
 
+
 class Client:
     def __init__(self):
         self.sock = socket.socket()
@@ -88,12 +89,14 @@ class Dialogue:
 
     def send(self, command: str,  data: Optional[dict] = None) -> dict:
         self.client.send(Transmitter.translate(command, data))
-        time.sleep(0.1)
-        answer = Receiver.translate(self.client.receive())
+        time.sleep(0.2)  # TODO костыль, нужен асинхронный сокет
+        response = self.client.receive()
+        answer = Receiver.translate(response)
+
 # <-------------logging, uncomment for debug -------
-        with open("log.txt", "a") as f:
-            f.writelines(f"{command}, {data}\n")
-            f.write(f"{answer}\n")
+#         with open("log.txt", "a") as f:
+#             f.writelines(f"{command}, {data}\n")
+#             f.write(f"{response}\n")
 # <-------------------end of logging ---------------
         return answer
 

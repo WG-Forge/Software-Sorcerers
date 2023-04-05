@@ -122,4 +122,5 @@ if __name__ == "__main__":
     available_cells = in_radius_excl((0, 0, 0), 2, 3)
     current_cell = (0, 3, -3)
     target_cell = (-1, -2, 3)
-    #print(a_star(available_cells, current_cell, target_cell))
+    # print(a_star(available_cells, current_cell, target_cell))
+    # print(cube_distance((-1, -7, 8), (-3, -7, 10)))

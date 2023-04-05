@@ -40,4 +40,3 @@ SERVER = 'wgforge-srv.wargaming.net'
 PORT = 443
 BUFFER_SIZE = 16384
 # <----------- end connection
-

@@ -1,4 +1,5 @@
 from typing import Optional, Union
+import random
 
 import config as cf
 import cube_math as cm
@@ -33,6 +34,7 @@ class Vehicle:
         self.sp = cf.SPEED_POINTS[self.model.vehicle_type]
         self.max_shoot_range = cf.MAX_RANGE[self.model.vehicle_type]
         self.min_range = cf.MIN_RANGE[self.model.vehicle_type]
+        self.damage = cf.DAMAGE[self.model.vehicle_type]
         self.priority = None
 
     def refresh_model(self, state: "GameState") -> None:
@@ -53,7 +55,10 @@ class Vehicle:
 
     def choose_target(self, targets: set[tuple[int, int, int]], state: "GameState", map_: "GameMap")\
             -> tuple[int, int, int]:
-        return targets.pop()  # TODO here some target choosing logic, targets are already shootable:)
+        for target in targets:
+            if state.agressive_tanks[target] <= self.damage:
+                return target
+        return targets.pop()
 
     def make_turn(self, state: "GameState", map_: "GameMap") -> Optional[tuple[str, dict]]:
         self.refresh_model(state)
@@ -69,11 +74,13 @@ class Vehicle:
         is_in_base = self.model.coordinates in map_.base
         if is_in_base:
             self.priority = None
+            return
         our_tanks_in_base = state.get_our_tanks_cells().intersection(map_.base)
         empty_base_cells = map_.base.difference(state.tank_cells)
         if empty_base_cells and len(our_tanks_in_base) < 2:
             self.priority = empty_base_cells.pop()
-            # TODO: all strategy is here, should set priority (one free cell or None), we can overload it for different types of vehicles
+        if self.priority is None or self.priority == self.model.coordinates:
+            self.priority = random.choice(map_.available_cells.difference(map_.base).difference(state.tank_cells))
 
     def move_to_priority(self, map_: "GameMap", state: "GameState") -> Optional[tuple[str, dict]]:
         step_cell = None
@@ -109,6 +116,21 @@ class HeavyTank(Vehicle):
 class AtSpg(Vehicle):
     def __init__(self, spec: tuple[int, "TankModel"]):
         super().__init__(spec)
+
+    def targets_in_range(self, state: "GameState") -> Union[set, set[tuple[int, int, int]]]:
+        targets = set()
+        neutral_tanks = state.tank_cells.difference(state.get_agressive_cells())
+        for direction in self.cells_in_range():
+            if not direction.intersection(neutral_tanks) and direction.intersection(state.get_agressive_cells()):
+                targets.union(direction)
+        return targets
+
+    def choose_target(self, targets: set[tuple[int, int, int]],
+                      state: "GameState", map_: "GameMap") -> tuple[int, int, int]:
+        return max([targets.intersection(direction) for direction in self.cells_in_range()], key=len).pop()
+
+    def cells_in_range(self) -> list[set[tuple[int, int, int]]]:
+        return cm.normal_directions(self.model.coordinates, self.max_shoot_range + self.model.shoot_range_bonus)
 
 
 class Spg(Vehicle):

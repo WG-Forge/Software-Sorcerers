@@ -20,16 +20,18 @@ class Controller:
         self.init_game()
 # <---------------------- main loop ---------------------
         while not self.game_state.is_finished:
-            while self.game_state.current_player_id != self.idx:
-                self.refresh_game_state()
-                sleep(0.05)
+            sleep(0.1)
+            self.refresh_game_state()
+            if self.game_state.is_finished:
+                break
+            if self.game_state.current_player_id != self.idx:
+                continue
             for vehicle in self.vehicles_list:
                 vehicle_turn = vehicle.make_turn(self.game_state, self.map)
                 if not (vehicle_turn is None):
                     self.game_state.update_data(vehicle_turn)
                     self.dialogue.send(*vehicle_turn)
             self.dialogue.send("TURN")
-            self.refresh_game_state()
 # <-------------------- end of main loop ----------------
 
         print(f"Game ended, winner: {self.game_state.winner}")
@@ -57,22 +59,12 @@ if __name__ == "__main__":
     login_data_1 = {
         "name": "Sorcerer",
         "password": "123",
-        "game": "mygame1",
-        "num_turns": None,
+        "game": "mygame124",
+        "num_turns": 45,
         "num_players": 1,
         "is_observer": False
     }
-    login_data_2 = {
-        "name": "Sorcerer2",
-        "password": "123",
-        "game": "mygame1",
-        "num_turns": None,
-        "num_players": 2,
-        "is_observer": False
-    }
     player_1 = Controller(login_data_1)
-    player_2 = Controller(login_data_2)
     t1 = Thread(target=player_1.play)
-    t2 = Thread(target=player_2.play)
     t1.start()
-    #t2.start()
+

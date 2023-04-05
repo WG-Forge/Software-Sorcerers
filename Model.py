@@ -57,34 +57,60 @@ class GameMap:
         ...
 # <------------------ end of methods for next stages ---------------------
 
+
 class GameState:
     def __init__(self, data: dict, idx: int):
+        self.idx = idx
         self.is_finished = data["finished"]
         self.current_player_id = data["current_player_idx"]
         self.winner = data["winner"]
-        self.our_tanks = self.parse_our_tanks(data["vehicles"], idx) # ordered (left to right) dict{id:TankModel} (update if we move)
-        self.tank_cells = self.parse_tank_cells(data["vehicles"]) # set of all tank cells for moving logic  (update if you move)
-        self.agressive_tanks = self.parse_agressive_tanks(data, idx) # dictioanry cell:hp(update if you shoot enemy vehicle)
+        self.attack_matrix = data["attack_matrix"]
+
+        self.attack_matrix.pop(str(self.idx))
+
+        self.our_tanks = self.parse_our_tanks(data["vehicles"], idx)  # ordered (left to right) dict{id:TankModel} (update if we move)
+        self.tank_cells = self.parse_tank_cells(data["vehicles"])  # set of all tank cells for moving logic  (update if you move)
+        self.agressive_tanks = self.parse_agressive_tanks(data["vehicles"])  # dictioanry cell:hp(update if you shoot enemy vehicle)
 
 
     @staticmethod
     def parse_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int, "TankModel"]:
-        our_tanks = {int(key): TankModel((value["health"],
-                                          value["vehicle_type"],
-                                          (value["position"]["x"], value["position"]["y"], value["position"]["z"])
+        our_tanks = {int(id): TankModel((vehicle["health"],
+                                         vehicle["vehicle_type"],
+                                        (vehicle["position"]["x"], vehicle["position"]["y"], vehicle["position"]["z"])
                                           ))
-                     for key, value in vehicles.items() if value["player_id"] == idx}
-
-        return coll.OrderedDict(sorted(our_tanks.items(), key=lambda x: x[1].coordinates[0]))
+                     for id, vehicle in vehicles.items() if vehicle["player_id"] == idx}
+        tank_gen = (tank for tank in our_tanks.values())
+        first_tank = next(tank_gen)
+        second_tank = next(tank_gen)
+        if first_tank.coordinates[0] == second_tank.coordinates[0]:
+            sorting_key = 2
+        elif first_tank.coordinates[1] == second_tank.coordinates[1]:
+            sorting_key = 0
+        else:
+            sorting_key = 1
+        return coll.OrderedDict(sorted(our_tanks.items(), key=lambda x: abs(x[1].coordinates[sorting_key])))
 
 
     @staticmethod
     def parse_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
-        return {(record["position"]["x"], record["position"]["y"], record["position"]["z"]) for record in vehicles.values()}
+        return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]) for tank in vehicles.values()}
 
-    @staticmethod
-    def parse_agressive_tanks(data:dict, idx: int) -> Optional[dict[tuple[int, int, int], int]]:
-        pass
+    def parse_agressive_tanks(self, vehicles: dict) -> Optional[dict[tuple[int, int, int], int]]:
+        return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]): tank["health"]
+                for tank in vehicles.values() if tank["player_id"] in self.get_non_neutral_players()}
+
+    def get_non_neutral_players(self) -> set:
+        non_neutral_set = set()
+        list_of_enemies = [int(player) for player in self.attack_matrix]
+        for player in list_of_enemies:
+            if not (player in self.attack_matrix.values()):
+                non_neutral_set.add(player)
+        for player, attack_list in self.attack_matrix.items():
+            if self.idx in attack_list:
+                non_neutral_set.add(int(player))
+        return non_neutral_set
+
 
     def update_data(self, data: tuple[str, dict]):
         if data:
@@ -92,7 +118,7 @@ class GameState:
             vehicle_id = data[1]["vehicle_id"]
             position = (data[1]["target"]["x"], data[1]["target"]["y"], data[1]["target"]["z"])
             if action == "SHOOT":
-                self.agressive_tanks[position] -= cf.DAMAGE[our_tanks[vehicle_id].vehicle_type]
+                self.agressive_tanks[position] -= cf.DAMAGE[self.our_tanks[vehicle_id].vehicle_type]
                 if self.agressive_tanks[position] <= 0:
                     self.agressive_tanks.pop(position)
             else:
@@ -103,7 +129,7 @@ class GameState:
     def get_agressive_cells(self) -> set[tuple[int, int, int]]:
         if self.agressive_tanks:
             return {cell for cell in self.agressive_tanks}
-        return {}
+        return set()
 
     def get_our_tanks_cells(self) -> set[tuple[int, int, int]]:
         return {vehicle.coordinates for vehicle in self.our_tanks.values()}
@@ -189,7 +215,7 @@ if __name__ == "__main__":
     print(GameState.parse_tank_cells(vehicles_dict))
 
     print("Test parse_our_tanks:")
-    our_tanks = GameState.parse_our_tanks(vehicles_dict, 1);
+    our_tanks = GameState.parse_our_tanks(vehicles_dict, 1)
     for tank in our_tanks.values():
         print(tank.hp, " ", tank.vehicle_type, " ", tank.coordinates)
 
