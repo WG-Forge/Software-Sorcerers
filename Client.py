@@ -24,7 +24,7 @@ class Client:
         init_read = self.sock.recv(8)
         status_code = int.from_bytes(init_read[0:4], byteorder="little")
         if status_code != 0:
-            raise RuntimeError(f"{cf.SPEED_POINTS[status_code]}")
+            raise RuntimeError(f"{cf.STATUS_CODE[status_code]}")
         msg_len = int.from_bytes(init_read[4:8], byteorder="little")
         bytes_recd = 0
         while bytes_recd < msg_len:
