@@ -1,4 +1,5 @@
 import math
+from functools import cache
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
@@ -66,19 +67,14 @@ class Hex(QtWidgets.QWidget):
         self.pen = QtGui.QPen(QtGui.QColor(*cf.HEX_BORDER_COLOR))
         self.pen.setWidth(cf.HEX_BORDER_WEIGHT)
         self.brush = QtGui.QBrush(QtGui.QColor(*self.color))
-        self.width = hex_outer_radius * 2
-        self.height = math.sqrt(3) * hex_outer_radius
         self.polygon = self.createHex(hex_outer_radius)
 
-
-    def createHex(self, r):
+    @staticmethod
+    @cache
+    def createHex(radius):
         polygon = QtGui.QPolygonF()
-        W = 60
-        for i in range(6):
-            t = W * i
-            x = r * math.cos(math.radians(t))
-            y = r * math.sin(math.radians(t))
-            polygon.append(QtCore.QPointF(self.width / 2 + x, self.height / 2 + y))
+        for point in cm.get_hex_points(radius):
+            polygon.append(QtCore.QPointF(*point))
         return polygon
 
     def paintEvent(self, event):
@@ -91,16 +87,29 @@ class Hex(QtWidgets.QWidget):
 
 
 if __name__ == "__main__":
+    login_data_2 = {
+        "name": "Sorcerer2",
+        "password": "123",
+        "game": "mygame125",
+        "num_turns": 45,
+        "num_players": 2,
+        "is_observer": False
+    }
+    player_2 = Presenter(login_data_2)
+    player_2.start()
+
     login_data_1 = {
         "name": "Sorcerer",
         "password": "123",
         "game": "mygame125",
         "num_turns": 45,
-        "num_players": 1,
+        "num_players": 2,
         "is_observer": False
     }
     app = QtWidgets.QApplication()
     window = Window(login_data_1)
     window.show()
     app.exec()
+
+
 

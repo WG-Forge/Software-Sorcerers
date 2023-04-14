@@ -34,17 +34,21 @@ class Presenter(QtCore.QThread):
             if self.game_state.is_finished:
                 break
             if self.game_state.current_player_id != self.idx:
+                self.msleep(20)
                 continue
+            self.setPriority(QtCore.QThread.Priority.HighestPriority)
             for vehicle in self.vehicles_list:
                 vehicle_turn = vehicle.make_turn(self.game_state, self.map)
                 if not (vehicle_turn is None):
                     self.game_state.update_data(vehicle_turn)
                     self.dialogue.send(*vehicle_turn)
             self.dialogue.send("TURN")
+            self.setPriority(QtCore.QThread.Priority.NormalPriority)
 # <-------------------- end of main loop ----------------
 
         self.game_ended.emit(f"Game ended, winner: {self.game_state.winner}")
         self.dialogue.send("LOGOUT")
+        self.quit()
 
     def refresh_game_state(self):
         self.game_state = GameState(self.dialogue.send("GAME_STATE"), self.idx)

@@ -74,6 +74,12 @@ def hex_to_pixel(size: int, cell:tuple[int, int, int]):
     y = size * (math.sqrt(3) / 2 * cell[0] + math.sqrt(3) * cell[1])
     return x, y
 
+def get_hex_points(radius:float):
+    width = radius * 2
+    height = math.sqrt(3) * radius
+    return ((width / 2 + radius * math.cos(math.radians(60 * i)),
+             height / 2 + radius * math.sin(math.radians(60 * i))) for i in range(6))
+
 
 def a_star(map_cells: set[tuple[int, int, int]], start: tuple[int, int, int],
            finish: tuple[int, int, int]) -> list[tuple[int, int, int]]:
