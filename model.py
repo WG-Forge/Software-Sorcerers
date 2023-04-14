@@ -17,9 +17,9 @@ class GameMap:
         self.base = {(base_cell["x"], base_cell["y"], base_cell["z"]) for base_cell in data["content"]["base"]}
 
 # <----------------------- attributes for next stages -------------------
-        self.light_repairs = self.parse_light_repairs(data["content"])
-        self.hard_repairs = self.parse_hard_repairs(data["content"])
-        self.catapults = self.parse_catapults(data["content"])
+#         self.light_repairs = self.parse_light_repairs(data["content"])
+#         self.hard_repairs = self.parse_hard_repairs(data["content"])
+#         self.catapults = self.parse_catapults(data["content"])
 # <------------------- end of attributes for next stages ----------------
 
     @staticmethod

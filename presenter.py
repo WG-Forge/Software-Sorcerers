@@ -26,29 +26,31 @@ class Presenter(QtCore.QThread):
         self.init_game()
 # <---------------------- main loop ---------------------
         while not self.game_state.is_finished:
-            self.refresh_game_state()
-            if self.game_state.is_finished:
+            current_game_state = self.dialogue.send("GAME_STATE")
+            if current_game_state["finished"]:
+                self.refresh_game_state(current_game_state)
                 break
-            if self.game_state.current_turn != self.turn:
-                state = deepcopy(self.game_state)  # to avoid changing game_state while drawing
-                self.game_state_updated.emit(self.map, state)
+            if current_game_state["current_turn"] != self.turn:
+                self.refresh_game_state(current_game_state)
+                self.game_state_updated.emit(self.map, deepcopy(self.game_state))
                 self.turn = self.game_state.current_turn
-            if self.game_state.current_player_id != self.idx:
+            if current_game_state["current_player_idx"] != self.idx:
                 continue
             for vehicle in self.vehicles_list:
                 vehicle_turn = vehicle.make_turn(self.game_state, self.map)
                 if not (vehicle_turn is None):
                     self.game_state.update_data(vehicle_turn)
                     self.dialogue.send(*vehicle_turn)
-            self.dialogue.send("TURN")
+                if vehicle == self.vehicles_list[-1]:
+                    self.dialogue.send("TURN")
 # <-------------------- end of main loop ----------------
 
         self.game_ended.emit(f"Game ended, winner: {self.game_state.winner}")
         self.dialogue.send("LOGOUT")
         self.quit()
 
-    def refresh_game_state(self):
-        self.game_state = GameState(self.dialogue.send("GAME_STATE"), self.idx)
+    def refresh_game_state(self, game_state):
+        self.game_state = GameState(game_state, self.idx)
 
     def refresh_game_actions(self):
         self.game_actions = GameActions(self.dialogue.send("ACTIONS"))
@@ -60,7 +62,7 @@ class Presenter(QtCore.QThread):
         self.dialogue.start_dialogue()
         login_answer = self.dialogue.send("LOGIN", self.login_data)
         self.idx = login_answer["idx"]
-        self.refresh_game_state()
+        self.refresh_game_state(self.dialogue.send("GAME_STATE"))
         self.map = GameMap(self.dialogue.send("MAP"))
         self.init_vehicles()
         self.game_state_updated.emit(self.map, self.game_state)

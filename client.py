@@ -1,6 +1,7 @@
 import socket
 import json
 from typing import Optional
+import time
 
 import config as cf
 
@@ -17,6 +18,7 @@ class Client:
         self.sock.close()
 
     def send(self, data: bytes):
+        print(data)
         self.sock.send(data)
 
     def receive(self) -> bytes:
@@ -31,6 +33,7 @@ class Client:
             chunk = self.sock.recv(min(msg_len - bytes_recd, cf.BUFFER_SIZE))
             chunks.append(chunk)
             bytes_recd = bytes_recd + len(chunk)
+        print(chunks)
         return b''.join(chunks)
 
 
@@ -55,8 +58,8 @@ class Dialogue:
 
 # <-------------logging, uncomment for debug -------
 #         with open("log.txt", "a") as f:
-#             f.writelines(f"{command}, {data}\n")
-#             f.write(f"{response}\n")
+#             f.writelines(f"{time.ctime()}, {command}, {data}\n")
+#             f.write(f"{time.ctime()}, {response}\n")
 # <-------------------end of logging ---------------
 
         return answer
