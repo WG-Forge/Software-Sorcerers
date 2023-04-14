@@ -9,9 +9,9 @@ from main import Controller
 login_data_1 = {
     "name": "Sorcerer",
     "password": "123",
-    "game": "mygame124",
+    "game": "mygame125",
     "num_turns": 45,
-    "num_players": 1,  # change it if you want to run two bots
+    "num_players": 1,
     "is_observer": False
 }
 
@@ -67,6 +67,7 @@ class Window(QtWidgets.QMainWindow):
             hex_.setParent(self)
             x, y = cm.hex_to_pixel(self.hex_outer_radius, cell)
             hex_.move(self.getMidMap()[0] + x, self.getMidMap()[1] + y)
+            hex_.show()
 
 
 class Hex(QtWidgets.QWidget):

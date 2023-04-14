@@ -62,6 +62,7 @@ class GameState:
     def __init__(self, data: dict, idx: int):
         self.idx = idx
         self.is_finished = data["finished"]
+        self.current_turn = data["current_turn"]
         self.current_player_id = data["current_player_idx"]
         self.winner = data["winner"]
         self.attack_matrix = data["attack_matrix"]

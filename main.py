@@ -17,17 +17,20 @@ class Controller(QtCore.QThread):
         self.game_state = None
         self.game_actions = None
         self.map = None
+        self.turn = None
 
     def run(self):
         self.init_game()
 # <---------------------- main loop ---------------------
         while not self.game_state.is_finished:
             self.refresh_game_state()
+            if self.game_state.current_turn != self.turn:
+                self.game_state_updated.emit(self.map, self.game_state)
+                self.turn = self.game_state.current_turn
             if self.game_state.is_finished:
                 break
             if self.game_state.current_player_id != self.idx:
                 continue
-            self.game_state_updated.emit(self.map, self.game_state)
             for vehicle in self.vehicles_list:
                 vehicle_turn = vehicle.make_turn(self.game_state, self.map)
                 if not (vehicle_turn is None):
@@ -55,6 +58,7 @@ class Controller(QtCore.QThread):
         self.refresh_game_state()
         self.map = GameMap(self.dialogue.send("MAP"))
         self.init_vehicles()
+        self.game_state_updated.emit(self.map, self.game_state)
 
 
 if __name__ == "__main__":
@@ -67,15 +71,3 @@ if __name__ == "__main__":
         "is_observer": False
     }
 
-# <----------- if you want to test game with two bots uncomment cobe below, and dont forgot to change num of players
-#     login_data_2 = {
-#         "name": "Sorcerer2",
-#         "password": "123",
-#         "game": "mygame124",
-#         "num_turns": 45,
-#         "num_players": 2,
-#         "is_observer": False
-#     }
-#     player_2 = Controller(login_data_2)
-#     t2 = Thread(target=player_2.play)
-#     t2.start()
