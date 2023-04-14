@@ -23,6 +23,7 @@ BASE_COLOR = (255, 204, 153)
 OUR_TANKS_COLOR = (178, 255, 102)
 ENEMY_COLOR = (255, 102, 102)
 
+
 class Window(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -46,6 +47,7 @@ class Window(QtWidgets.QMainWindow):
 
     def initSignals(self):
         self.controllerThread.game_state_updated.connect(self.refreshMap)
+        self.controllerThread.game_ended.connect(self.showMessage)
 
     def refreshMap(self, map_: "GameMap", state: "GameState"):
         self.hex_outer_radius = self.size().height() / (4 * map_.size)
@@ -69,6 +71,9 @@ class Window(QtWidgets.QMainWindow):
             hex_.move(self.getMidMap()[0] + x, self.getMidMap()[1] + y)
             hex_.show()
 
+    def showMessage(self, text):
+        message = QtWidgets.QMessageBox(text=text, parent=self)
+        message.show()
 
 class Hex(QtWidgets.QWidget):
     def __init__(self, hex_outer_radius, color, text="", parent=None):

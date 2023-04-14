@@ -7,6 +7,7 @@ from Vehicle import VehicleFactory
 
 class Controller(QtCore.QThread):
     game_state_updated = QtCore.Signal(object, object)
+    game_ended = QtCore.Signal(str)
 
     def __init__(self, login_data: dict):
         super().__init__(None)
@@ -39,7 +40,7 @@ class Controller(QtCore.QThread):
             self.dialogue.send("TURN")
 # <-------------------- end of main loop ----------------
 
-        print(f"Game ended, winner: {self.game_state.winner}")
+        self.game_ended.emit(f"Game ended, winner: {self.game_state.winner}")
         self.dialogue.send("LOGOUT")
 
     def refresh_game_state(self):
