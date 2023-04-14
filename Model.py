@@ -68,9 +68,10 @@ class GameState:
 
         self.attack_matrix.pop(str(self.idx))
 
-        self.our_tanks = self.parse_our_tanks(data["vehicles"], idx)  # ordered (left to right) dict{id:TankModel} (update if we move)
-        self.tank_cells = self.parse_tank_cells(data["vehicles"])  # set of all tank cells for moving logic  (update if you move)
-        self.agressive_tanks = self.parse_agressive_tanks(data["vehicles"])  # dictioanry cell:hp(update if you shoot enemy vehicle)
+        self.enemy_tanks = self.parse_enemy_tanks(data["vehicles"])
+        self.our_tanks = self.parse_our_tanks(data["vehicles"], idx)
+        self.tank_cells = self.parse_tank_cells(data["vehicles"])
+        self.agressive_tanks = self.parse_agressive_tanks(data["vehicles"])
 
 
     @staticmethod
@@ -99,6 +100,20 @@ class GameState:
     def parse_agressive_tanks(self, vehicles: dict) -> Optional[dict[tuple[int, int, int], int]]:
         return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]): tank["health"]
                 for tank in vehicles.values() if tank["player_id"] in self.get_non_neutral_players()}
+
+    def parse_enemy_tanks(self, vehicles: dict):
+        return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]): tank["health"]
+                for tank in vehicles.values() if tank["player_id"] != self.idx}
+
+    def get_enemy_cells(self):
+        if self.enemy_tanks:
+            return {cell for cell in self.enemy_tanks}
+        return set()
+
+    def get_our_tank_id(self, cell):
+        for tank_id, model in self.our_tanks.items():
+            if model.coordinates == cell:
+                return tank_id
 
     def get_non_neutral_players(self) -> set:
         non_neutral_set = set()

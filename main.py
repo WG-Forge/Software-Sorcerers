@@ -1,12 +1,15 @@
-from threading import Thread
+from PySide6 import QtCore
 
 from Client import Dialogue
 from Model import GameState, GameMap, GameActions
 from Vehicle import VehicleFactory
 
 
-class Controller:
+class Controller(QtCore.QThread):
+    game_state_updated = QtCore.Signal(object, object)
+
     def __init__(self, login_data: dict):
+        super().__init__(None)
         self.idx = None
         self.login_data = login_data
         self.dialogue = Dialogue()
@@ -15,7 +18,7 @@ class Controller:
         self.game_actions = None
         self.map = None
 
-    def play(self):
+    def run(self):
         self.init_game()
 # <---------------------- main loop ---------------------
         while not self.game_state.is_finished:
@@ -24,6 +27,7 @@ class Controller:
                 break
             if self.game_state.current_player_id != self.idx:
                 continue
+            self.game_state_updated.emit(self.map, self.game_state)
             for vehicle in self.vehicles_list:
                 vehicle_turn = vehicle.make_turn(self.game_state, self.map)
                 if not (vehicle_turn is None):
@@ -62,9 +66,6 @@ if __name__ == "__main__":
         "num_players": 1,  # change it if you want to run two bots
         "is_observer": False
     }
-    player_1 = Controller(login_data_1)
-    t1 = Thread(target=player_1.play)
-    t1.start()
 
 # <----------- if you want to test game with two bots uncomment cobe below, and dont forgot to change num of players
 #     login_data_2 = {
