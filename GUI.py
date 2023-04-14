@@ -6,11 +6,9 @@ from Model import GameMap
 import cube_math as cm
 
 
-
 HEX_BORDER_COLOR = (0, 0, 0)
 HEX_BORDER_WEIGHT = 2
 HEX_DEFAULT_FILL = (200, 200, 200)
-
 
 
 class Window(QtWidgets.QMainWindow):
@@ -28,16 +26,12 @@ class Window(QtWidgets.QMainWindow):
         self.initUi()
 
 
-
     def initUi(self):
         self.setGeometry(0, 0, self.screen.size().width(), self.screen.size().height())
-        #self.mapLayout = QtWidgets.QVBoxLayout()
-        #self.mapWidget = QtWidgets.QWidget()
         self.hex_outer_radius = self.screen.size().height()/(4*self.map_.size)
-        print(self.hex_outer_radius)
+        self.scene = QtWidgets.QGraphicsScene()
         self.initMap(self.map_)
-        #self.mapLayout.addWidget(self.mapWidget)
-        #elf.setLayout(self.mapLayout)
+
 
     def initMap(self, map_: "GameMap"):
         for cell in map_.cells:
@@ -48,7 +42,8 @@ class Window(QtWidgets.QMainWindow):
             mid_y = self.screen.size().height()/2.1
             x, y = cm.hex_to_pixel(self.hex_outer_radius, cell)
             hex_.move(mid_x + x, mid_y + y)
-            # hex_.label.setText(f"{cell[0]}{cell[1]}")
+
+
 
 class Hex(QtWidgets.QWidget):
     def __init__(self, hex_outer_radius, parent=None):
@@ -56,9 +51,10 @@ class Hex(QtWidgets.QWidget):
         self.pen = QtGui.QPen(QtGui.QColor(*HEX_BORDER_COLOR))
         self.pen.setWidth(HEX_BORDER_WEIGHT)
         self.brush = QtGui.QBrush(QtGui.QColor(*HEX_DEFAULT_FILL))
+        self.width = hex_outer_radius * 2
+        self.height = math.sqrt(3) * hex_outer_radius
         self.polygon = self.createHex(hex_outer_radius)
-        # self.cellLayout = QtWidgets.QVBoxLayout()
-        # self.label = QtWidgets.QLabel(self)
+
 
     def createHex(self, r):
         polygon = QtGui.QPolygonF()
@@ -67,7 +63,7 @@ class Hex(QtWidgets.QWidget):
             t = W * i
             x = r * math.cos(math.radians(t))
             y = r * math.sin(math.radians(t))
-            polygon.append(QtCore.QPointF(self.width() / 2 + x, self.height() / 2 + y))
+            polygon.append(QtCore.QPointF(self.width / 2 + x, self.height / 2 + y))
         return polygon
 
     def paintEvent(self, event):
@@ -75,10 +71,6 @@ class Hex(QtWidgets.QWidget):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawPolygon(self.polygon)
-        font = painter.font()
-        font.setFamily('Times')
-        font.setPointSize(12)
-        painter.setFont(font)
         vmin, value = '1', '2'
         painter.drawText(10, 10, "{}{}".format(vmin, value))
         painter.end()
