@@ -1,11 +1,13 @@
+from copy import deepcopy
+
 from PySide6 import QtCore
 
-from Client import Dialogue
-from Model import GameState, GameMap, GameActions
-from Vehicle import VehicleFactory
+from client import Dialogue
+from model import GameState, GameMap, GameActions
+from vehicle import VehicleFactory
 
 
-class Controller(QtCore.QThread):
+class Presenter(QtCore.QThread):
     game_state_updated = QtCore.Signal(object, object)
     game_ended = QtCore.Signal(str)
 
@@ -26,7 +28,8 @@ class Controller(QtCore.QThread):
         while not self.game_state.is_finished:
             self.refresh_game_state()
             if self.game_state.current_turn != self.turn:
-                self.game_state_updated.emit(self.map, self.game_state)
+                state = deepcopy(self.game_state)  # to avoid changing game_state while drawing
+                self.game_state_updated.emit(self.map, state)
                 self.turn = self.game_state.current_turn
             if self.game_state.is_finished:
                 break
@@ -63,12 +66,4 @@ class Controller(QtCore.QThread):
 
 
 if __name__ == "__main__":
-    login_data_1 = {
-        "name": "Sorcerer",
-        "password": "123",
-        "game": "mygame124",
-        "num_turns": 45,
-        "num_players": 1,  # change it if you want to run two bots
-        "is_observer": False
-    }
-
+    pass

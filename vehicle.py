@@ -3,7 +3,7 @@ import random
 
 import config as cf
 import cube_math as cm
-from Model import TankModel, GameState, GameMap
+from model import TankModel, GameState, GameMap
 
 
 class VehicleFactory:

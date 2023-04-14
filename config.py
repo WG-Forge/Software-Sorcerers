@@ -58,4 +58,12 @@ ACTIONS = {
         "MOVE": 101,
         "SHOOT": 102,
     }
-# <----------- end connection
+# <----------- GUI colours
+HEX_BORDER_COLOR = (0, 0, 0)
+HEX_BORDER_WEIGHT = 2
+HEX_DEFAULT_FILL = (200, 200, 200)
+OBSTACLE_COLOR = (64, 64, 64)
+BASE_COLOR = (255, 204, 153)
+OUR_TANKS_COLOR = (178, 255, 102)
+ENEMY_COLOR = (255, 102, 102)
+SPAWN_COLOR = (160, 160, 160)
