@@ -1,4 +1,4 @@
-import time
+
 from copy import deepcopy
 
 from PySide6 import QtCore
@@ -40,7 +40,7 @@ class Presenter(QtCore.QThread):
                 continue
             for vehicle in self.vehicles_list:
                 vehicle_turn = vehicle.make_turn(self.game_state, self.map)
-                if not (vehicle_turn is None):
+                if vehicle_turn:
                     self.game_state.update_data(vehicle_turn)
                     self.dialogue.send(*vehicle_turn)
             self.dialogue.send("TURN")
