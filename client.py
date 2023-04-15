@@ -1,7 +1,6 @@
 import socket
 import json
 from typing import Optional
-import time
 
 import config as cf
 
@@ -24,14 +23,14 @@ class Client:
         chunks = []
         init_read = self.sock.recv(8)
         status_code = int.from_bytes(init_read[0:4], byteorder="little")
-        if status_code != 0:
-            raise RuntimeError(f"{cf.STATUS_CODE[status_code]}")
         msg_len = int.from_bytes(init_read[4:8], byteorder="little")
         bytes_recd = 0
         while bytes_recd < msg_len:
             chunk = self.sock.recv(min(msg_len - bytes_recd, cf.BUFFER_SIZE))
             chunks.append(chunk)
             bytes_recd = bytes_recd + len(chunk)
+        if status_code != 0:
+            raise RuntimeError(f"{cf.STATUS_CODE[status_code]}", b''.join(chunks))
         return b''.join(chunks)
 
 
@@ -53,13 +52,6 @@ class Dialogue:
         answer = None
         if response:
             answer = json.loads(response.decode("UTF-8"))
-
-# <-------------logging, uncomment for debug -------
-#         with open("log.txt", "a") as f:
-#             f.writelines(f"{time.ctime()}, {command}, {data}\n")
-#             f.write(f"{time.ctime()}, {response}\n")
-# <-------------------end of logging ---------------
-
         return answer
 
     @staticmethod
