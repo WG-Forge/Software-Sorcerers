@@ -62,6 +62,8 @@ class Vehicle:
 
     def make_turn(self, state: "GameState", map_: "GameMap") -> Optional[tuple[str, dict]]:
         self.refresh_model(state)
+        if self.model.hp <= 0:
+            return None
         targets = self.targets_in_range(state)
         if targets:
             target = self.choose_target(targets, state, map_)
