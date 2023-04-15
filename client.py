@@ -18,7 +18,6 @@ class Client:
         self.sock.close()
 
     def send(self, data: bytes):
-        print(data)
         self.sock.send(data)
 
     def receive(self) -> bytes:
@@ -33,7 +32,6 @@ class Client:
             chunk = self.sock.recv(min(msg_len - bytes_recd, cf.BUFFER_SIZE))
             chunks.append(chunk)
             bytes_recd = bytes_recd + len(chunk)
-        print(chunks)
         return b''.join(chunks)
 
 

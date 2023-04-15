@@ -1,3 +1,4 @@
+import time
 from copy import deepcopy
 
 from PySide6 import QtCore
@@ -35,14 +36,14 @@ class Presenter(QtCore.QThread):
                 self.game_state_updated.emit(self.map, deepcopy(self.game_state))
                 self.turn = self.game_state.current_turn
             if current_game_state["current_player_idx"] != self.idx:
+                self.dialogue.send("TURN")
                 continue
             for vehicle in self.vehicles_list:
                 vehicle_turn = vehicle.make_turn(self.game_state, self.map)
                 if not (vehicle_turn is None):
                     self.game_state.update_data(vehicle_turn)
                     self.dialogue.send(*vehicle_turn)
-                if vehicle == self.vehicles_list[-1]:
-                    self.dialogue.send("TURN")
+            self.dialogue.send("TURN")
 # <-------------------- end of main loop ----------------
 
         self.game_ended.emit(f"Game ended, winner: {self.game_state.winner}")
