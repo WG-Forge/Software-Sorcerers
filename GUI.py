@@ -98,34 +98,12 @@ class Hex(QtWidgets.QWidget):
 
 
 if __name__ == "__main__":
-    login_data_2 = {
-        "name": "Sorcerer2",
-        "password": "36",
-        "game": "my2",
-        "num_turns": 45,
-        "num_players": 3,
-        "is_observer": False
-    }
-    player_2 = Presenter(login_data_2)
-    player_2.start()
-
-    login_data_3 = {
-        "name": "Sorcerer3",
-        "password": "36",
-        "game": "my2",
-        "num_turns": 45,
-        "num_players": 3,
-        "is_observer": False
-    }
-    player_3 = Presenter(login_data_3)
-    player_3.start()
-
     login_data_1 = {
         "name": "Sorcerer1",
         "password": "36",
         "game": "my2",
         "num_turns": 45,
-        "num_players": 3,
+        "num_players": 1,
         "is_observer": False
     }
     app = QtWidgets.QApplication()
