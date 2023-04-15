@@ -94,7 +94,7 @@ class Vehicle:
                     step_cell = path_to_priority[speed_points - 1]
                     break
                 speed_points -= 1
-        if step_cell:
+        if step_cell and not(step_cell in state.tank_cells):
             return self.move(step_cell)
 
 
