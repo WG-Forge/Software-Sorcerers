@@ -24,12 +24,22 @@ class GameMap:
 
     @staticmethod
     def parse_obstacles(content: dict) -> set[Optional[tuple[int, int, int]]]:
+        """
+        Handles parsing obstackles from content part of GAME_MAP response
+        :param content: dict with content part of GAME_MAP response
+        :return: set of obstacle cells
+        """
         if not ("obstacle" in content):
             return set()  # Here is not used None to avoid TypeError in self.available_cells
         return {(obs["x"], obs["y"], obs["z"])for obs in content["obstacle"]}
 
     @staticmethod
     def parse_spawn_points(spawn_points: list) -> set[tuple[int, int, int]]:
+        """
+        Handles parsing spawn points from spawn points part of GAME_MAP response
+        :param spawn_points: dict with spawn points part of GAME_MAP response
+        :return: set of spawn points cells
+        """
         spawn_points_set = set()
         for player_vehicles in spawn_points:
             for list_of_spawn_points in player_vehicles.values():
@@ -38,27 +48,28 @@ class GameMap:
         return spawn_points_set
 
 # <----------------------- methods for next stages ---------------------
-    @staticmethod
-    def parse_catapults(content: dict) -> Optional[set[tuple[int, int, int]]]:
-        if not ("catapult" in content):
-            return None
-        ...
-
-    @staticmethod
-    def parse_light_repairs(content: dict) -> Optional[set[tuple[int, int, int]]]:
-        if not ("light_repair" in content):
-            return None
-        ...
-
-    @staticmethod
-    def parse_hard_repairs(content: dict) -> Optional[set[tuple[int, int, int]]]:
-        if not ("light_repair" in content):
-            return None
-        ...
+#     @staticmethod
+#     def parse_catapults(content: dict) -> Optional[set[tuple[int, int, int]]]:
+#         if not ("catapult" in content):
+#             return None
+#         ...
+#
+#     @staticmethod
+#     def parse_light_repairs(content: dict) -> Optional[set[tuple[int, int, int]]]:
+#         if not ("light_repair" in content):
+#             return None
+#         ...
+#
+#     @staticmethod
+#     def parse_hard_repairs(content: dict) -> Optional[set[tuple[int, int, int]]]:
+#         if not ("light_repair" in content):
+#             return None
+#         ...
 # <------------------ end of methods for next stages ---------------------
 
 
 class GameState:
+
     def __init__(self, data: dict, idx: int):
         self.idx = idx
         self.is_finished = data["finished"]
@@ -70,17 +81,21 @@ class GameState:
         self.attack_matrix.pop(str(self.idx))
 
         self.enemy_tanks = self.parse_enemy_tanks(data["vehicles"])
-        self.our_tanks = self.parse_our_tanks(data["vehicles"], idx)
+        self.our_tanks = self.parse_tanks_by_id(data["vehicles"], idx)
         self.tank_cells = self.parse_tank_cells(data["vehicles"])
         self.agressive_tanks = self.parse_agressive_tanks(data["vehicles"])
 
-
     @staticmethod
-    def parse_our_tanks(vehicles: dict, idx: int) -> OrderedDict[int, "TankModel"]:
+    def parse_tanks_by_id(vehicles: dict, idx: int) -> OrderedDict[int, "TankModel"]:
+        """
+        Handles parsing of tanks from "vehicles" part of GAME_STATE response for player with given id
+        :param vehicles: dict with vehicles from response
+        :param idx: player id
+        :return: Ordered left-to-right dict(tank_id: TankModel)
+        """
         our_tanks = {int(id): TankModel((vehicle["health"],
                                          vehicle["vehicle_type"],
-                                        (vehicle["position"]["x"], vehicle["position"]["y"], vehicle["position"]["z"])
-                                          ))
+                                        (vehicle["position"]["x"], vehicle["position"]["y"], vehicle["position"]["z"])))
                      for id, vehicle in vehicles.items() if vehicle["player_id"] == idx}
         tank_gen = (tank for tank in our_tanks.values())
         first_tank = next(tank_gen)
@@ -93,42 +108,61 @@ class GameState:
             sorting_key = 1
         return coll.OrderedDict(sorted(our_tanks.items(), key=lambda x: abs(x[1].coordinates[sorting_key])))
 
-
     @staticmethod
     def parse_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
+        """
+        Handle parsing of tank cells from "vehicles" part of GAME_STATE response
+        :param vehicles: dict with "vehicles" part of GAME_STATE response
+        :return: set of tank cells
+        """
         return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]) for tank in vehicles.values()}
 
     def parse_agressive_tanks(self, vehicles: dict) -> Optional[dict[tuple[int, int, int], int]]:
+        """
+        :param vehicles: dict with "vehicles" part of GAME_STATE response
+        :return: dict (cell: hp) of tanks that we can shoot
+        """
         return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]): tank["health"]
                 for tank in vehicles.values() if tank["player_id"] in self.get_non_neutral_players()}
 
-    def parse_enemy_tanks(self, vehicles: dict):
+    def parse_enemy_tanks(self, vehicles: dict) -> dict:
+        """
+        :param vehicles: dict with "vehicles" part of GAME_STATE response
+        :return: dict (cell: hp) of enemy tanks
+        """
         return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]): tank["health"]
                 for tank in vehicles.values() if tank["player_id"] != self.idx}
 
-    def get_enemy_cells(self):
-        if self.enemy_tanks:
-            return {cell for cell in self.enemy_tanks}
-        return set()
-
-    def get_our_tank_id(self, cell):
+    def get_our_tank_id(self, cell) -> int:
+        """
+        :param cell: cell with tank
+        :return: id of our tank in given cell
+        """
         for tank_id, model in self.our_tanks.items():
             if model.coordinates == cell:
                 return tank_id
 
-    def get_non_neutral_players(self) -> set:
-        non_neutral_set = set()
-        list_of_enemies = [int(player) for player in self.attack_matrix]
-        for player in list_of_enemies:
-            if not (player in self.attack_matrix.values()):
-                non_neutral_set.add(player)
+    def get_non_neutral_players(self) -> set[int]:
+        """
+        return players which we may attack using attack matrix
+        :return: set of players ids
+        """
+        non_neutral_set = {int(player) for player in self.attack_matrix}
+        for player in list(non_neutral_set):
+            for value in self.attack_matrix.values():
+                if player in value:
+                    non_neutral_set.remove(player)
         for player, attack_list in self.attack_matrix.items():
             if self.idx in attack_list:
                 non_neutral_set.add(int(player))
         return non_neutral_set
 
-
-    def update_data(self, data: tuple[str, dict]):
+    def update_data(self, data: tuple[str, dict]) -> None:
+        """
+        updates tanks state for current turn using action provided by vehicle
+        :param data: action provided by vehicle in vehicles turn
+        :return: None
+        """
         if data:
             action = data[0]
             vehicle_id = data[1]["vehicle_id"]
@@ -138,18 +172,25 @@ class GameState:
                 if self.agressive_tanks[position] <= 0:
                     self.agressive_tanks.pop(position)
             else:
-                self.tank_cells.discard(self.our_tanks[vehicle_id].coordinates)
+                self.tank_cells.remove(self.our_tanks[vehicle_id].coordinates)
                 self.tank_cells.add(position)
                 self.our_tanks[vehicle_id].coordinates = position
 
     def get_agressive_cells(self) -> set[tuple[int, int, int]]:
+        """
+        returns cells with tanks that we may shoot
+        :return: set of cells
+        """
         if self.agressive_tanks:
             return {cell for cell in self.agressive_tanks}
         return set()
 
     def get_our_tanks_cells(self) -> set[tuple[int, int, int]]:
+        """
+        return cells with our tanks
+        :return: set of cells
+        """
         return {vehicle.coordinates for vehicle in self.our_tanks.values()}
-
 
 
 class GameActions:
@@ -158,12 +199,14 @@ class GameActions:
 
 
 class TankModel:
+
     def __init__(self, data: tuple[int, str, tuple[int, int, int]]):
         self.hp = data[0]
         self.vehicle_type = data[1]
         self.coordinates = data[2]
 # <----------------------- attributes for next stages -------------------
         self.shoot_range_bonus = 0
+
 
 if __name__ == "__main__":
     vehicle_dict = {
@@ -226,12 +269,11 @@ if __name__ == "__main__":
 
     }
 
-
     print("Test parse_tank_cells: ")
     print(GameState.parse_tank_cells(vehicles_dict))
 
     print("Test parse_our_tanks:")
-    our_tanks = GameState.parse_our_tanks(vehicles_dict, 1)
+    our_tanks = GameState.parse_tanks_by_id(vehicles_dict, 1)
     for tank in our_tanks.values():
         print(tank.hp, " ", tank.vehicle_type, " ", tank.coordinates)
 

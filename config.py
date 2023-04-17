@@ -37,7 +37,7 @@ CENTER_POINT = (0, 0, 0)  # in case we will have other coordinate in central poi
 # <----------- connection
 SERVER = 'wgforge-srv.wargaming.net'
 PORT = 443
-BUFFER_SIZE = 16384
+BUFFER_SIZE = 8192
 
 STATUS_CODE = {
         0: "OKEY",

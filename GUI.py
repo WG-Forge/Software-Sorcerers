@@ -13,7 +13,8 @@ class Window(QtWidgets.QMainWindow):
         super().__init__(parent)
         self.initThreads(login_data)
         self.screen = QtWidgets.QApplication.screenAt(self.pos())
-        self.setGeometry(0, 0, self.screen.size().width()//2, self.screen.size().height())
+        self.setGeometry(0, 0, self.screen.size().width()//2, self.screen.size().height()//1.1)
+        self.setFixedSize(self.size())
         self.hex_outer_radius = None
         self.initSignals()
 
@@ -30,9 +31,16 @@ class Window(QtWidgets.QMainWindow):
         self.controllerThread.game_state_updated.connect(self.refreshMap)
         self.controllerThread.game_ended.connect(self.showMessage)
 
+    def setHexRadius(self, map_size):
+        self.hex_outer_radius = min(self.size().height() / (4 * map_size), self.size().height() / (4 * map_size))
+
     def refreshMap(self, map_: "GameMap", state: "GameState"):
-        self.hex_outer_radius = min(self.size().height() / (4 * map_.size), self.size().height() / (4 * map_.size))
+        if self.hex_outer_radius is None:
+            self.setHexRadius(map_.size)
         for cell in map_.cells:
+            existing_cell = self.findChild(Hex, f"{cell}")
+            if existing_cell:
+                existing_cell.setParent(None)
             text = ""
             color = cf.HEX_DEFAULT_FILL
             if cell in map_.obstacles:
@@ -41,7 +49,7 @@ class Window(QtWidgets.QMainWindow):
                 color = cf.OUR_TANKS_COLOR
                 tank_id = state.get_our_tank_id(cell)
                 text = state.our_tanks[tank_id].hp
-            elif cell in state.get_enemy_cells():
+            elif cell in state.enemy_tanks:
                 color = cf.ENEMY_COLOR
                 text = state.enemy_tanks[cell]
             elif cell in map_.base:
@@ -50,6 +58,7 @@ class Window(QtWidgets.QMainWindow):
                 color = cf.SPAWN_COLOR
             hex_ = Hex(self.hex_outer_radius, color, text)
             hex_.setParent(self)
+            hex_.setObjectName(f"{cell}")
             x, y = cm.hex_to_pixel(self.hex_outer_radius, cell)
             hex_.move(self.getMidMap()[0] + x, self.getMidMap()[1] + y)
             hex_.show()
@@ -89,23 +98,12 @@ class Hex(QtWidgets.QWidget):
 
 
 if __name__ == "__main__":
-    login_data_2 = {
-        "name": "Sorcerer2",
-        "password": "36",
-        "game": "my12",
-        "num_turns": 45,
-        "num_players": 2,
-        "is_observer": False
-    }
-    player_2 = Presenter(login_data_2)
-    player_2.start()
-
     login_data_1 = {
-        "name": "Sorcerer5",
+        "name": "Sorcerer1",
         "password": "36",
-        "game": "my12",
+        "game": "my2",
         "num_turns": 45,
-        "num_players": 2,
+        "num_players": 1,
         "is_observer": False
     }
     app = QtWidgets.QApplication()
