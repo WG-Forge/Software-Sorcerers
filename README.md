@@ -7,7 +7,7 @@ To run the app you sould run GUI.py, login data also in GUI.py.
 ## Module description
 **client.py** contains next classes to client-server interact:
 - Client - creates socket with given parameters, sends binary requests, receives binary responces
-- Dialogue - instantiates Client object, interacts with server through it, receives commands, and Python objects, translates it into binnary, returns Python objects
+- Connection - instantiates Client object, interacts with server through it, receives commands, and Python objects, translates it into binnary, returns Python objects
 
 **presenter.py** 
 - contains Presenter thread class with main game loop.

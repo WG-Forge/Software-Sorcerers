@@ -2,7 +2,8 @@ import socket
 import json
 from typing import Optional
 
-import config as cf
+from config import connection as ccf
+from config.actions import Actions
 
 
 class Client:
@@ -11,7 +12,7 @@ class Client:
         self.sock = socket.socket()
 
     def connect(self):
-        self.sock.connect((cf.SERVER, cf.PORT))
+        self.sock.connect((ccf.SERVER, ccf.PORT))
 
     def disconnect(self):
         self.sock.close()
@@ -26,27 +27,27 @@ class Client:
         msg_len = int.from_bytes(init_read[4:8], byteorder="little")
         bytes_recd = 0
         while bytes_recd < msg_len:
-            chunk = self.sock.recv(min(msg_len - bytes_recd, cf.BUFFER_SIZE))
+            chunk = self.sock.recv(min(msg_len - bytes_recd, ccf.BUFFER_SIZE))
             chunks.append(chunk)
             bytes_recd = bytes_recd + len(chunk)
         if status_code != 0:
-            raise RuntimeError(f"{cf.STATUS_CODE[status_code]}", b''.join(chunks))
+            raise RuntimeError(f"{ccf.StatusCode(status_code)}", b''.join(chunks))
         return b''.join(chunks)
 
 
-class Dialogue:
+class Connection:
     def __init__(self):
         self.client = None
 
-    def start_dialogue(self):
+    def init_connection(self):
         if self.client is None:
             self.client = Client()
         self.client.connect()
 
-    def end_dialogue(self):
+    def close_connection(self):
         self.client.disconnect()
 
-    def send(self, command: str,  data: Optional[dict] = None) -> Optional[dict]:
+    def send(self, command: "Actions",  data: Optional[dict] = None) -> Optional[dict]:
         self.client.send(self.translate(command, data))
         response = self.client.receive()
         answer = None
@@ -55,8 +56,8 @@ class Dialogue:
         return answer
 
     @staticmethod
-    def translate(action: str, data: Optional[dict] = None) -> bytes:
-        b_action = cf.ACTIONS[action].to_bytes(4, byteorder="little")
+    def translate(action: "Actions", data: Optional[dict] = None) -> bytes:
+        b_action = action.to_bytes(4, byteorder="little")
         if data is None:
             json_string = ""
         else:
@@ -67,14 +68,14 @@ class Dialogue:
 
 
 if __name__ == "__main__":
-    dialogue = Dialogue()
-    dialogue.start_dialogue()
-    answer = dialogue.send("LOGIN", {"name": "Boris"})
+    connection = Connection()
+    connection.init_connection()
+    answer = connection.send(Actions.LOGIN, {"name": "Ivan"})
     print(answer)
-    answer = dialogue.send("MAP")
+    answer = connection.send(Actions.MAP)
     print(answer)
-    answer = dialogue.send("GAME_STATE")
+    answer = connection.send(Actions.GAME_STATE)
     print(answer)
-    answer = dialogue.send("LOGOUT")
+    answer = connection.send(Actions.LOGOUT)
     print(answer)
-    dialogue.end_dialogue()
+    connection.close_connection()

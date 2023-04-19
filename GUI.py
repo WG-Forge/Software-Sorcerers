@@ -5,7 +5,10 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from model import GameMap, GameState
 import cube_math as cm
 from presenter import Presenter
-import config as cf
+from config import ui as ucf
+
+"""
+"""
 
 
 class Window(QtWidgets.QMainWindow):
@@ -42,20 +45,20 @@ class Window(QtWidgets.QMainWindow):
             if existing_cell:
                 existing_cell.setParent(None)
             text = ""
-            color = cf.HEX_DEFAULT_FILL
+            color = ucf.HEX_DEFAULT_FILL
             if cell in map_.obstacles:
-                color = cf.OBSTACLE_COLOR
+                color = ucf.OBSTACLE_COLOR
             elif cell in state.get_our_tanks_cells():
-                color = cf.OUR_TANKS_COLOR
+                color = ucf.OUR_TANKS_COLOR
                 tank_id = state.get_our_tank_id(cell)
                 text = state.our_tanks[tank_id].hp
             elif cell in state.enemy_tanks:
-                color = cf.ENEMY_COLOR
+                color = ucf.ENEMY_COLOR
                 text = state.enemy_tanks[cell]
             elif cell in map_.base:
-                color = cf.BASE_COLOR
+                color = ucf.BASE_COLOR
             elif cell in map_.spawn_points:
-                color = cf.SPAWN_COLOR
+                color = ucf.SPAWN_COLOR
             hex_ = Hex(self.hex_outer_radius, color, text)
             hex_.setParent(self)
             hex_.setObjectName(f"{cell}")
@@ -75,8 +78,8 @@ class Hex(QtWidgets.QWidget):
         super().__init__(parent)
         self.color = color
         self.text = text
-        self.pen = QtGui.QPen(QtGui.QColor(*cf.HEX_BORDER_COLOR))
-        self.pen.setWidth(cf.HEX_BORDER_WEIGHT)
+        self.pen = QtGui.QPen(QtGui.QColor(*ucf.HEX_BORDER_COLOR))
+        self.pen.setWidth(ucf.HEX_BORDER_WEIGHT)
         self.brush = QtGui.QBrush(QtGui.QColor(*self.color))
         self.polygon = self.createHex(hex_outer_radius)
 
@@ -98,12 +101,22 @@ class Hex(QtWidgets.QWidget):
 
 
 if __name__ == "__main__":
+    login_data_2 = {
+        "name": "Sorcerer2",
+        "password": "36",
+        "game": "my2",
+        "num_turns": 45,
+        "num_players": 2,
+        "is_observer": False
+    }
+    player2 = Presenter(login_data_2)
+    player2.start()
     login_data_1 = {
         "name": "Sorcerer1",
         "password": "36",
         "game": "my2",
         "num_turns": 45,
-        "num_players": 1,
+        "num_players": 2,
         "is_observer": False
     }
     app = QtWidgets.QApplication()

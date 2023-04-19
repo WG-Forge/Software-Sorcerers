@@ -1,7 +1,8 @@
 from typing import Optional, Union
 import random
 
-import config as cf
+from config import game_balance as gb_cf
+from config.actions import Actions
 import cube_math as cm
 from model import TankModel, GameState, GameMap
 
@@ -37,10 +38,10 @@ class Vehicle:
     def __init__(self,  spec: tuple[int, "TankModel"]):
         self.id = spec[0]
         self.model = spec[-1]
-        self.sp = cf.SPEED_POINTS[self.model.vehicle_type]
-        self.max_shoot_range = cf.MAX_RANGE[self.model.vehicle_type]
-        self.min_range = cf.MIN_RANGE[self.model.vehicle_type]
-        self.damage = cf.DAMAGE[self.model.vehicle_type]
+        self.sp = gb_cf.SPEED_POINTS[self.model.vehicle_type]
+        self.max_shoot_range = gb_cf.MAX_RANGE[self.model.vehicle_type]
+        self.min_range = gb_cf.MIN_RANGE[self.model.vehicle_type]
+        self.damage = gb_cf.DAMAGE[self.model.vehicle_type]
         self.priority = None
 
     def refresh_model(self, state: "GameState") -> None:
@@ -63,25 +64,26 @@ class Vehicle:
         """
         Returns cells with non-neutral player tanks that are in range of current tank
         :param state: GameState obj
+        :param map_: GameMap obj
         :return: set of cells
         """
         return self.cells_in_range().intersection(state.get_agressive_cells())
 
-    def shoot(self, target: tuple[int, int, int]) -> tuple[str, dict]:
+    def shoot(self, target: tuple[int, int, int]) -> tuple["Actions", dict]:
         """
         Produces SHOOT action with self.id and target cell
         :param target: cell with enemy tank
         :return: Python obj SHOOT action
         """
-        return "SHOOT", {"vehicle_id": self.id, "target": {"x": target[0], "y": target[1], "z": target[2]}}
+        return Actions.SHOOT, {"vehicle_id": self.id, "target": {"x": target[0], "y": target[1], "z": target[2]}}
 
-    def move(self, cell: tuple[int, int, int]) -> tuple[str, dict]:
+    def move(self, cell: tuple[int, int, int]) -> tuple["Actions", dict]:
         """
         Produces MOVE action with self.id and target cell
         :param cell: empty cell in moving range
         :return: Pyhon obj MOVE action
         """
-        return "MOVE", {"vehicle_id": self.id, "target": {"x": cell[0], "y": cell[1], "z": cell[2]}}
+        return Actions.MOVE, {"vehicle_id": self.id, "target": {"x": cell[0], "y": cell[1], "z": cell[2]}}
 
     def choose_target(self, targets: set[tuple[int, int, int]], state: "GameState") -> tuple[int, int, int]:
         """
@@ -96,7 +98,7 @@ class Vehicle:
                 return target
         return targets.pop()
 
-    def make_turn(self, state: "GameState", map_: "GameMap") -> Optional[tuple[str, dict]]:
+    def make_turn(self, state: "GameState", map_: "GameMap") -> Optional[tuple["Actions", dict]]:
         """
         Main method to provide vehicle action, returns Python obj with SHOOT or MOVE action | None
         :param state: GameState obj
@@ -130,7 +132,7 @@ class Vehicle:
         if self.priority is None or self.priority == self.model.coordinates:
             self.priority = random.choice(list(map_.available_cells.difference(map_.base).difference(state.tank_cells)))
 
-    def move_to_priority(self, map_: "GameMap", state: "GameState") -> Optional[tuple[str, dict]]:
+    def move_to_priority(self, map_: "GameMap", state: "GameState") -> Optional[tuple["Actions", dict]]:
         """
         Method finds path to priority, and call move action with reachable empty cell on the path to priority,
         according to current game situation

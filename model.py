@@ -3,14 +3,19 @@ import collections as coll
 
 
 import cube_math as cm
-import config as cf
+from config import game_balance as gb_cf
+from config.actions import Actions
+
+
+CENTER_POINT = (0, 0, 0)
 
 
 class GameMap:
+
     def __init__(self, data: dict):
         self.size = data["size"]
         self.name = data["name"]
-        self.cells = cm.in_radius(cf.CENTER_POINT, self.size - 1)
+        self.cells = cm.in_radius(CENTER_POINT, self.size - 1)
         self.obstacles = self.parse_obstacles(data["content"])
         self.spawn_points = self.parse_spawn_points(data["spawn_points"])
         self.available_cells = self.cells.difference(self.obstacles.union(self.spawn_points))
@@ -93,10 +98,10 @@ class GameState:
         :param idx: player id
         :return: Ordered left-to-right dict(tank_id: TankModel)
         """
-        our_tanks = {int(id): TankModel((vehicle["health"],
-                                         vehicle["vehicle_type"],
-                                        (vehicle["position"]["x"], vehicle["position"]["y"], vehicle["position"]["z"])))
-                     for id, vehicle in vehicles.items() if vehicle["player_id"] == idx}
+        our_tanks = {int(tank_id): TankModel((vehicle["health"],
+                                              vehicle["vehicle_type"],
+                                             (vehicle["position"]["x"], vehicle["position"]["y"], vehicle["position"]["z"])))
+                     for tank_id, vehicle in vehicles.items() if vehicle["player_id"] == idx}
         tank_gen = (tank for tank in our_tanks.values())
         first_tank = next(tank_gen)
         second_tank = next(tank_gen)
@@ -167,8 +172,8 @@ class GameState:
             action = data[0]
             vehicle_id = data[1]["vehicle_id"]
             position = (data[1]["target"]["x"], data[1]["target"]["y"], data[1]["target"]["z"])
-            if action == "SHOOT":
-                self.agressive_tanks[position] -= cf.DAMAGE[self.our_tanks[vehicle_id].vehicle_type]
+            if action == Actions.SHOOT:
+                self.agressive_tanks[position] -= gb_cf.DAMAGE[self.our_tanks[vehicle_id].vehicle_type]
                 if self.agressive_tanks[position] <= 0:
                     self.agressive_tanks.pop(position)
             else:
