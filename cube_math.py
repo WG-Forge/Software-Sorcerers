@@ -1,6 +1,5 @@
 from itertools import permutations as perm
 from collections import namedtuple
-import math
 from heapq import merge
 
 
@@ -67,18 +66,6 @@ def in_radius_excl(hex_: tuple[int, int, int], small_radius: int, big_radius: in
     :return: set of hexes coordinates in given large circle excluding hexes in small circle
     """
     return in_radius(hex_, big_radius).difference(in_radius(hex_, small_radius))
-
-def hex_to_pixel(size: int, cell:tuple[int, int, int]):
-    #TODO documentation
-    x = size * (3 / 2 * cell[0])
-    y = size * (math.sqrt(3) / 2 * cell[0] + math.sqrt(3) * cell[1])
-    return x, y
-
-def get_hex_points(radius:float):
-    width = radius * 2
-    height = math.sqrt(3) * radius
-    return ((width / 2 + radius * math.cos(math.radians(60 * i)),
-             height / 2 + radius * math.sin(math.radians(60 * i))) for i in range(6))
 
 
 def a_star(map_cells: set[tuple[int, int, int]], start: tuple[int, int, int],
