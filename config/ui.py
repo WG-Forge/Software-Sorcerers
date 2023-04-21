@@ -1,3 +1,7 @@
+"""
+This module contains constants using in GUI
+"""
+
 HEX_BORDER_COLOR = (0, 0, 0)
 HEX_BORDER_WEIGHT = 2
 HEX_DEFAULT_FILL = (200, 200, 200)

@@ -1,3 +1,6 @@
+"""
+This module contains vehicle characteristics defined by rules
+"""
 
 DAMAGE = {
     "medium_tank": 1,
