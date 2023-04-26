@@ -1,20 +1,30 @@
+"""
+This module contains classes to parse and store game data
+"""
 from typing import Optional, OrderedDict
 import collections as coll
 
 
-import cube_math as cm
-import config as cf
+from coordinates import Coordinates
+from config import game_balance as gb_cf
+from config.actions import Actions
+
+
+CENTER_POINT = (0, 0, 0)
 
 
 class GameMap:
+    """
+    Data class to parse and store static game objects from GAME_MAP response
+    """
     def __init__(self, data: dict):
         self.size = data["size"]
         self.name = data["name"]
-        self.cells = cm.in_radius(cf.CENTER_POINT, self.size - 1)
+        self.cells = Coordinates(CENTER_POINT).in_radius(self.size - 1)
         self.obstacles = self.parse_obstacles(data["content"])
         self.spawn_points = self.parse_spawn_points(data["spawn_points"])
         self.available_cells = self.cells.difference(self.obstacles.union(self.spawn_points))
-        self.base = {(base_cell["x"], base_cell["y"], base_cell["z"]) for base_cell in data["content"]["base"]}
+        self.base = {Coordinates((i["x"], i["y"], i["z"])) for i in data["content"]["base"]}
 
 # <----------------------- attributes for next stages -------------------
 #         self.light_repairs = self.parse_light_repairs(data["content"])
@@ -23,28 +33,28 @@ class GameMap:
 # <------------------- end of attributes for next stages ----------------
 
     @staticmethod
-    def parse_obstacles(content: dict) -> set[Optional[tuple[int, int, int]]]:
+    def parse_obstacles(content: dict) -> set[Optional[Coordinates]]:
         """
-        Handles parsing obstackles from content part of GAME_MAP response
+        Handles parsing obstacles from content part of GAME_MAP response
         :param content: dict with content part of GAME_MAP response
-        :return: set of obstacle cells
+        :return: set of obstacle Coordinates
         """
-        if not ("obstacle" in content):
-            return set()  # Here is not used None to avoid TypeError in self.available_cells
-        return {(obs["x"], obs["y"], obs["z"])for obs in content["obstacle"]}
+        if "obstacle" in content:
+            return {Coordinates((obs["x"], obs["y"], obs["z"])) for obs in content["obstacle"]}
+        return set()  # Here is not used None to avoid TypeError in self.available_cells
 
     @staticmethod
-    def parse_spawn_points(spawn_points: list) -> set[tuple[int, int, int]]:
+    def parse_spawn_points(spawn_points: list) -> set[Coordinates]:
         """
         Handles parsing spawn points from spawn points part of GAME_MAP response
         :param spawn_points: dict with spawn points part of GAME_MAP response
-        :return: set of spawn points cells
+        :return: set of spawn points Coordinates
         """
         spawn_points_set = set()
         for player_vehicles in spawn_points:
             for list_of_spawn_points in player_vehicles.values():
                 for point in list_of_spawn_points:
-                    spawn_points_set.add((point["x"], point["y"], point["z"]))
+                    spawn_points_set.add(Coordinates((point["x"], point["y"], point["z"])))
         return spawn_points_set
 
 # <----------------------- methods for next stages ---------------------
@@ -69,13 +79,15 @@ class GameMap:
 
 
 class GameState:
-
+    """
+    Data class to parse and store dynamic game data from GAME_STATE response
+    In part of game logic handle only neutrality rule. Also updates during
+    players turn to avoid move collisions, and shooting
+    units destroyed by previous tank
+    """
     def __init__(self, data: dict, idx: int):
         self.idx = idx
-        self.is_finished = data["finished"]
         self.current_turn = data["current_turn"]
-        self.current_player_id = data["current_player_idx"]
-        self.winner = data["winner"]
         self.attack_matrix = data["attack_matrix"]
 
         self.attack_matrix.pop(str(self.idx))
@@ -83,64 +95,93 @@ class GameState:
         self.enemy_tanks = self.parse_enemy_tanks(data["vehicles"])
         self.our_tanks = self.parse_tanks_by_id(data["vehicles"], idx)
         self.tank_cells = self.parse_tank_cells(data["vehicles"])
-        self.agressive_tanks = self.parse_agressive_tanks(data["vehicles"])
+        self.aggressive_tanks = self.parse_aggressive_tanks(data["vehicles"])
 
     @staticmethod
-    def parse_tanks_by_id(vehicles: dict, idx: int) -> OrderedDict[int, "TankModel"]:
+    def parse_tanks_by_id(vehicles: dict, idx: int) -> dict[int, "TankModel"]:
         """
-        Handles parsing of tanks from "vehicles" part of GAME_STATE response for player with given id
+        Handles parsing of tanks from "vehicles" part of
+        GAME_STATE response for player with given id
         :param vehicles: dict with vehicles from response
         :param idx: player id
-        :return: Ordered left-to-right dict(tank_id: TankModel)
+        :return: dict(tank_id: TankModel)
         """
-        our_tanks = {int(id): TankModel((vehicle["health"],
-                                         vehicle["vehicle_type"],
-                                        (vehicle["position"]["x"], vehicle["position"]["y"], vehicle["position"]["z"])))
-                     for id, vehicle in vehicles.items() if vehicle["player_id"] == idx}
-        tank_gen = (tank for tank in our_tanks.values())
-        first_tank = next(tank_gen)
-        second_tank = next(tank_gen)
+        tanks_dict = {}
+        for tank_id, i in vehicles.items():
+            if i["player_id"] == idx:
+                tank_id = int(tank_id)
+                position = Coordinates((i["position"]["x"], i["position"]["y"], i["position"]["z"]))
+                health = i["health"]
+                model = i["vehicle_type"]
+                tanks_dict[tank_id] = TankModel(health, model, position)
+        return tanks_dict
+
+    def get_ordered_tanks(self) -> OrderedDict:
+        """
+        Creates ordered dict of player tanks, used only once at the beginning
+        of the game to instantiate vehicles and define order of their turn
+        :return: ordered left-to-right dict (tank_id: TankModel)
+        """
+        first_tank = list(self.our_tanks.values())[0]
+        second_tank = list(self.our_tanks.values())[1]
         if first_tank.coordinates[0] == second_tank.coordinates[0]:
             sorting_key = 2
         elif first_tank.coordinates[1] == second_tank.coordinates[1]:
             sorting_key = 0
         else:
             sorting_key = 1
-        return coll.OrderedDict(sorted(our_tanks.items(), key=lambda x: abs(x[1].coordinates[sorting_key])))
+        sorted_items = sorted(self.our_tanks.items(),
+                              key=lambda x: abs(x[1].coordinates[sorting_key]))
+        ordered_tanks = coll.OrderedDict()
+        for key, value in sorted_items:
+            ordered_tanks[key] = value
+        return ordered_tanks
 
     @staticmethod
-    def parse_tank_cells(vehicles: dict) -> set[tuple[int, int, int]]:
+    def parse_tank_cells(vehicles: dict) -> set[Coordinates]:
         """
         Handle parsing of tank cells from "vehicles" part of GAME_STATE response
         :param vehicles: dict with "vehicles" part of GAME_STATE response
-        :return: set of tank cells
+        :return: set of tank Coordinates
         """
-        return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]) for tank in vehicles.values()}
+        return {Coordinates((i["position"]["x"], i["position"]["y"], i["position"]["z"]))
+                for i in vehicles.values()}
 
-    def parse_agressive_tanks(self, vehicles: dict) -> Optional[dict[tuple[int, int, int], int]]:
+    def parse_aggressive_tanks(self, vehicles: dict) -> dict[Coordinates, int]:
         """
         :param vehicles: dict with "vehicles" part of GAME_STATE response
-        :return: dict (cell: hp) of tanks that we can shoot
+        :return: dict (cell: health) of tanks that we can shoot
         """
-        return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]): tank["health"]
-                for tank in vehicles.values() if tank["player_id"] in self.get_non_neutral_players()}
+        aggressive_tanks = {}
+        for i in vehicles.values():
+            if i["player_id"] in self.get_non_neutral_players():
+                position = (i["position"]["x"], i["position"]["y"], i["position"]["z"])
+                health = i["health"]
+                aggressive_tanks[Coordinates(position)] = health
+        return aggressive_tanks
 
-    def parse_enemy_tanks(self, vehicles: dict) -> dict:
+    def parse_enemy_tanks(self, vehicles: dict) -> dict[Coordinates, int]:
         """
         :param vehicles: dict with "vehicles" part of GAME_STATE response
-        :return: dict (cell: hp) of enemy tanks
+        :return: dict (cell: health) of enemy tanks
         """
-        return {(tank["position"]["x"], tank["position"]["y"], tank["position"]["z"]): tank["health"]
-                for tank in vehicles.values() if tank["player_id"] != self.idx}
+        enemy_tanks = {}
+        for i in vehicles.values():
+            if i["player_id"] != self.idx:
+                position = (i["position"]["x"], i["position"]["y"], i["position"]["z"])
+                health = i["health"]
+                enemy_tanks[Coordinates(position)] = health
+        return enemy_tanks
 
     def get_our_tank_id(self, cell) -> int:
         """
         :param cell: cell with tank
-        :return: id of our tank in given cell
+        :return: t_id of our tank in given cell
         """
         for tank_id, model in self.our_tanks.items():
-            if model.coordinates == cell:
-                return tank_id
+            if model.coordinates != cell:
+                continue
+            return tank_id
 
     def get_non_neutral_players(self) -> set[int]:
         """
@@ -166,26 +207,30 @@ class GameState:
         if data:
             action = data[0]
             vehicle_id = data[1]["vehicle_id"]
-            position = (data[1]["target"]["x"], data[1]["target"]["y"], data[1]["target"]["z"])
-            if action == "SHOOT":
-                self.agressive_tanks[position] -= cf.DAMAGE[self.our_tanks[vehicle_id].vehicle_type]
-                if self.agressive_tanks[position] <= 0:
-                    self.agressive_tanks.pop(position)
+            vehicle_type = self.our_tanks[vehicle_id].vehicle_type
+            if vehicle_type == "at_spg":
+                return
+            cell = (data[1]["target"]["x"], data[1]["target"]["y"], data[1]["target"]["z"])
+            position = Coordinates(cell)
+            if action == Actions.SHOOT:
+                self.aggressive_tanks[position] -= gb_cf.DAMAGE[vehicle_type]
+                if self.aggressive_tanks[position] <= 0:
+                    self.aggressive_tanks.pop(position)
             else:
                 self.tank_cells.remove(self.our_tanks[vehicle_id].coordinates)
                 self.tank_cells.add(position)
                 self.our_tanks[vehicle_id].coordinates = position
 
-    def get_agressive_cells(self) -> set[tuple[int, int, int]]:
+    def get_aggressive_cells(self) -> set[Coordinates]:
         """
         returns cells with tanks that we may shoot
         :return: set of cells
         """
-        if self.agressive_tanks:
-            return {cell for cell in self.agressive_tanks}
+        if self.aggressive_tanks:
+            return set(self.aggressive_tanks)
         return set()
 
-    def get_our_tanks_cells(self) -> set[tuple[int, int, int]]:
+    def get_our_tanks_cells(self) -> set[Coordinates]:
         """
         return cells with our tanks
         :return: set of cells
@@ -194,101 +239,25 @@ class GameState:
 
 
 class GameActions:
+    """
+    Data class to parse and store data from GAME_ACTIONS response
+    Currently not used
+    """
     def __init__(self, data: dict):
-        pass
+        self.data = data
 
 
 class TankModel:
-
-    def __init__(self, data: tuple[int, str, tuple[int, int, int]]):
-        self.hp = data[0]
-        self.vehicle_type = data[1]
-        self.coordinates = data[2]
+    """
+    Data class to store dynamic state of tanks
+    """
+    def __init__(self, health: int, model: str, cell: Coordinates):
+        self.health = health
+        self.vehicle_type = model
+        self.coordinates = cell
 # <----------------------- attributes for next stages -------------------
         self.shoot_range_bonus = 0
 
 
 if __name__ == "__main__":
-    vehicle_dict = {
-        "player_id": 1,
-        "vehicle_type": "medium_tank",
-        "health": 2,
-        "spawn_position": {
-            "x": 4,
-            "y": -3,
-            "z": 10
-        },
-        "position": {
-            "x": 3,
-            "y": -3,
-            "z": 10
-        },
-        "capture_points": 0,
-        "shoot_range_bonus": 0
-    }
-    vehicle_dict_1 = {
-        "player_id": 1,
-        "vehicle_type": "medium_tank",
-        "health": 2,
-        "spawn_position": {
-            "x": -7,
-            "y": -3,
-            "z": 10
-        },
-        "position": {
-            "x": 4,
-            "y": 5,
-            "z": 5,
-        },
-        "capture_points": 0,
-        "shoot_range_bonus": 0
-    }
-    vehicle_dict_2 = {
-        "player_id": 5,
-        "vehicle_type": "medium_tank",
-        "health": 17,
-        "spawn_position": {
-            "x": -7,
-            "y": -3,
-            "z": 10
-        },
-        "position": {
-            "x": 3,
-            "y": 5,
-            "z": 5,
-        },
-        "capture_points": 0,
-        "shoot_range_bonus": 0
-    }
-
-    # Create a dictionary for the "vehicles" key that contains the vehicle dictionary
-    vehicles_dict = {
-        "1": vehicle_dict,
-        "2": vehicle_dict_1,
-        "3": vehicle_dict_2
-
-    }
-
-    print("Test parse_tank_cells: ")
-    print(GameState.parse_tank_cells(vehicles_dict))
-
-    print("Test parse_our_tanks:")
-    our_tanks = GameState.parse_tanks_by_id(vehicles_dict, 1)
-    for tank in our_tanks.values():
-        print(tank.hp, " ", tank.vehicle_type, " ", tank.coordinates)
-
-    print(GameMap.parse_spawn_points([{'at_spg': [{'x': -3, 'y': -7, 'z': 10}],
-                                       'heavy_tank': [{'x': -5, 'y': -5, 'z': 10}],
-                                       'light_tank': [{'x': -6, 'y': -4, 'z': 10}],
-                                       'medium_tank': [{'x': -4, 'y': -6, 'z': 10}],
-                                       'spg': [{'x': -7, 'y': -3, 'z': 10}]},
-                                      {'at_spg': [{'x': -7, 'y': 10, 'z': -3}],
-                                       'heavy_tank': [{'x': -5, 'y': 10, 'z': -5}],
-                                       'light_tank': [{'x': -4, 'y': 10, 'z': -6}],
-                                       'medium_tank': [{'x': -6, 'y': 10, 'z': -4}],
-                                       'spg': [{'x': -3, 'y': 10, 'z': -7}]},
-                                      {'at_spg': [{'x': 10, 'y': -3, 'z': -7}],
-                                       'heavy_tank': [{'x': 10, 'y': -5, 'z': -5}],
-                                       'light_tank': [{'x': 10, 'y': -6, 'z': -4}],
-                                       'medium_tank': [{'x': 10, 'y': -4, 'z': -6}],
-                                       'spg': [{'x': 10, 'y': -7, 'z': -3}]}]))
+    pass
