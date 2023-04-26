@@ -3,7 +3,7 @@ It's a pity but only one member left in our team
 https://github.com/DimonDimskiy - Dmitrii Skrypnik
 ## How to run
 For GUI implementation used PySide6, all required packages in requirements.txt. App  tested on Python 3.11.
-To run the app you sould run GUI.py, login data also in GUI.py.
+To run the app you sould run gui.py, login data also in gui.py.
 ## Module description
 **server.py** contains next classes to client-server interact:
 - Server - creates socket with given parameters, sends binary requests, receives binary responces
