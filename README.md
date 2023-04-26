@@ -19,12 +19,13 @@ To run the app you sould run GUI.py, login data also in GUI.py.
 - TankModel - data class that store dynamic state of each our tank
 
 **vehicle.py** contains classes that handles bot turn logic
-- VehicleFactory - factory that instantiate proper type of vehicle
-- Vehicle  - superclass to all vehicle types
+- Vehicle  - superclass to all vehicle types, haas a factory method to instantiate proper type of vehicle
 - VehicleType classes - inherit Vehicle, implements some diferrent logic for each type of vehicle
 
-**cube_math.py** contains functions to handle some cubic coordinate math operations, and A* pathfinding algorithm for cubic coordinate cells
+**coordiinates.py** contains Coordinates class - extednded tuple to handle some cubic coordinate math operations, and A* pathfinding algorithm.
 
-**config.py** contains constants used in app
+**config folder** contains config files used in app.
 
-**GUI.py** contains main window, runs Presenter as a thread
+**tests folder** contains some unittests.
+
+**gui.py** contains main window, runs Presenter as a thread. Also contains Hex widget class, that represent map cells in main window.
