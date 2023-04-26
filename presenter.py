@@ -5,7 +5,7 @@ from copy import deepcopy
 
 from PySide6 import QtCore
 
-from client import Connection
+from server import Connection
 from model import GameState, GameMap, GameActions
 from vehicle import Vehicle
 from config.actions import Actions

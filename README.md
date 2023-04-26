@@ -5,9 +5,9 @@ https://github.com/DimonDimskiy - Dmitrii Skrypnik
 For GUI implementation used PySide6, all required packages in requirements.txt. App  tested on Python 3.11.
 To run the app you sould run GUI.py, login data also in GUI.py.
 ## Module description
-**client.py** contains next classes to client-server interact:
-- Client - creates socket with given parameters, sends binary requests, receives binary responces
-- Connection - instantiates Client object, interacts with server through it, receives commands, and Python objects, translates it into binnary, returns Python objects
+**server.py** contains next classes to client-server interact:
+- Server - creates socket with given parameters, sends binary requests, receives binary responces
+- Connection - instantiates Server object, interacts with server through it, receives commands, and Python objects, translates it into binnary, returns Python objects
 
 **presenter.py** 
 - contains Presenter thread class with main game loop.

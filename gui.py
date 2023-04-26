@@ -65,7 +65,7 @@ class Window(QtWidgets.QMainWindow):
         shift_y = self.hex_outer_radius * (math.sqrt(3) / 2 * cell[0] + math.sqrt(3) * cell[1])
         return shift_x, shift_y
 
-    def refresh_map(self, map_: "GameMap", state: "GameState") -> None:
+    def refresh_map(self, map_: GameMap, state: GameState) -> None:
         """
         Slot connected to presenter signal game_state_updated.
         Updates widgets in main window dependent on current game content.
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     login_data_1 = {
         "name": "Sorcerer1",
         "password": "36",
-        "game": "my212",
+        "game": "my2121",
         "num_turns": 45,
         "num_players": 1,
         "is_observer": False

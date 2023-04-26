@@ -9,7 +9,7 @@ from config import connection as ccf
 from config.actions import Actions
 
 
-class Client:
+class Server:
     """
     Class handles socket creation
     """
@@ -59,19 +59,19 @@ class Client:
 
 class Connection:
     """
-    Creates Client obj, encode Python objects into byte strings, send it to server using Client obj,
-    receive byte strings from Client obj, and decode them into Python objects
+    Creates Server obj, encode Python objects into byte strings, send it to server using Server obj,
+    receive byte strings from Server obj, and decode them into Python objects
     """
     def __init__(self):
         self.client = None
 
     def init_connection(self):
         """
-        Instantiates Client obj, initiates connection
+        Instantiates Server obj, initiates connection
         :return: None
         """
         if self.client is None:
-            self.client = Client()
+            self.client = Server()
         self.client.connect()
 
     def close_connection(self):
@@ -81,23 +81,23 @@ class Connection:
         """
         self.client.disconnect()
 
-    def send(self, command: "Actions",  data: Optional[dict] = None) -> Optional[dict]:
+    def send(self, command: Actions,  data: Optional[dict] = None) -> Optional[dict]:
         """
         Took Python objects, encode them into byte strings using translate method,
-        send byte strings to server using Client obj,
+        send byte strings to server using Server obj,
         receive response and decode it into Python objects, returns Python dict response
         :param command: action from enum type "Actions"
         :param data: dict | None
         :return: dict response
         """
-        self.client.send(self.translate(command, data))
+        self.client.send(self.encode(command, data))
         response = self.client.receive()
         if response:
             return json.loads(response.decode("UTF-8"))
         return None
 
     @staticmethod
-    def translate(action: "Actions", data: Optional[dict] = None) -> bytes:
+    def encode(action: Actions, data: Optional[dict] = None) -> bytes:
         """
         Encode action, and data into byte string
         :param action: action from enum type Actions

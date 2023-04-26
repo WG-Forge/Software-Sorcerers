@@ -1,6 +1,6 @@
 import unittest
 
-from client import Connection
+from server import Connection
 from config.actions import Actions
 
 
