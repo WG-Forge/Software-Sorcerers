@@ -2,7 +2,7 @@
 This module contains Coordinates class, that inherit from tuple,
 add new methods to work with coordinate tuples
 """
-from itertools import permutations as perm
+from itertools import permutations
 from collections import namedtuple
 from typing import Tuple, List, Set
 
@@ -41,7 +41,7 @@ class Coordinates(tuple):
         """
         :return: set of neighbours coordinate tuples
         """
-        return set(self.offset(direction) for direction in perm(range(-1, 2), 3))
+        return set(self.offset(direction) for direction in permutations(range(-1, 2), 3))
 
     def in_radius(self, radius: int) -> Set["Coordinates"]:
         """
@@ -73,7 +73,7 @@ class Coordinates(tuple):
                 z_positive_dir,
                 z_negative_dir]
 
-    def in_radius_excl(self, small_radius: int, big_radius: int):
+    def in_radius_excl(self, small_radius: int, big_radius: int) -> Set["Coordinates"]:
         """
         :param small_radius: radius of small circle
         :param big_radius: radius of large circle
@@ -81,8 +81,8 @@ class Coordinates(tuple):
         """
         return self.in_radius(big_radius).difference(self.in_radius(small_radius))
 
-    def a_star(self, map_cells: Set["Coordinates"],
-               finish: "Coordinates") -> List["Coordinates"]:
+    def a_star(self, map_cells: Set["Coordinates"], finish: "Coordinates") \
+            -> List["Coordinates"]:
         """
         A* pathfinding algorithm
         :param map_cells: set of available map cells excluding spawn points, obstacles

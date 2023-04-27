@@ -1,29 +1,30 @@
 """
-This module contains implementation of graphical user interface, using PySide6
+This module contains implementation of main window, using PySide6
 
 """
-from functools import lru_cache
-from typing import Generator
 import math
 
-from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui
 
-from model import GameMap, GameState
-from presenter import Presenter
-from config import ui as ucf
-from coordinates import Coordinates
+import GUI.ui as ui
+from logic.coordinates import Coordinates
+from GUI.hex_widget import Hex
+from logic.model import GameMap, GameState
+from logic.game import Game
 
 
 class Window(QtWidgets.QMainWindow):
     """
     Main window of user interface
     """
+
     def __init__(self, login_data, parent=None):
         super().__init__(parent)
-        self.presenter_thread = Presenter(login_data)
+        self.presenter_thread = Game(login_data)
         self.presenter_thread.start()
         self.screen = QtWidgets.QApplication.screenAt(self.pos())
-        self.setGeometry(0, 0, self.screen.size().width()//2, self.screen.size().height())
+        self.setGeometry(0, 0, self.screen.size().width() // ui.SCREEN_TO_WINDOW_WIDTH_RATIO
+                         , self.screen.size().height() // ui.SCREEN_TO_WINDOW_HIGH_RATIO)
         self.setFixedSize(self.size())
         self.hex_outer_radius = None
         self.init_signals()
@@ -34,7 +35,7 @@ class Window(QtWidgets.QMainWindow):
         :return: pixels x, y
         """
         mid_x = self.size().width() // 2
-        mid_y = self.size().height() // 2.2
+        mid_y = self.size().height() // 2.2  # Slightly moved to top
         return mid_x, mid_y
 
     def init_signals(self) -> None:
@@ -51,7 +52,7 @@ class Window(QtWidgets.QMainWindow):
         :param map_size: game map size (max coordinate value)
         :return: None
         """
-        self.hex_outer_radius =\
+        self.hex_outer_radius = \
             min(self.size().height() / (4 * map_size), self.size().height() / (4 * map_size))
 
     def hex_to_pixel(self, cell: Coordinates) -> tuple[int, int]:
@@ -83,20 +84,20 @@ class Window(QtWidgets.QMainWindow):
             if existing_cell:
                 existing_cell.setParent(None)
             text = ""
-            color = ucf.HEX_DEFAULT_FILL
+            color = ui.HEX_DEFAULT_FILL
             if cell in map_.obstacles:
-                color = ucf.OBSTACLE_COLOR
+                color = ui.OBSTACLE_COLOR
             elif cell in state.get_our_tanks_cells():
-                color = ucf.OUR_TANKS_COLOR
+                color = ui.OUR_TANKS_COLOR
                 tank_id = state.get_our_tank_id(cell)
                 text = state.our_tanks[tank_id].health
             elif cell in state.enemy_tanks:
-                color = ucf.ENEMY_COLOR
+                color = ui.ENEMY_COLOR
                 text = state.enemy_tanks[cell]
             elif cell in map_.base:
-                color = ucf.BASE_COLOR
+                color = ui.BASE_COLOR
             elif cell in map_.spawn_points:
-                color = ucf.SPAWN_COLOR
+                color = ui.SPAWN_COLOR
             hex_ = Hex(self.hex_outer_radius, color, text)
             hex_.setParent(self)
             hex_.setObjectName(f"{cell}")
@@ -120,70 +121,3 @@ class Window(QtWidgets.QMainWindow):
         :return: None
         """
         self.presenter_thread.exit()
-
-
-class Hex(QtWidgets.QWidget):
-    """
-    Hexagonal Widget class used to display map cells in main window
-    """
-    def __init__(self, hex_outer_radius, color, text="", parent=None):
-        super().__init__(parent)
-        self.color = color
-        self.text = text
-        self.pen = QtGui.QPen(QtGui.QColor(*ucf.HEX_BORDER_COLOR))
-        self.pen.setWidth(ucf.HEX_BORDER_WEIGHT)
-        self.brush = QtGui.QBrush(QtGui.QColor(*self.color))
-        self.polygon = self.create_hex(hex_outer_radius)
-
-    @lru_cache(1)
-    def create_hex(self, radius: float) -> QtGui.QPolygonF:
-        """
-        Creates PySide QPolygonF obj of hexagon inscribed in a circle of given radius
-        :param radius: circumscribed circle radius
-        :return: PySide QPolygonF obj
-        """
-        polygon = QtGui.QPolygonF()
-        for point in self.get_hex_points(radius):
-            polygon.append(QtCore.QPointF(*point))
-        return polygon
-
-    @staticmethod
-    def get_hex_points(radius: float) -> Generator:
-        """
-        Creates generator of vertex coordinates in pixels relative
-        to center of hexagon inscribed in a circle of given radius
-        :param radius: circumscribed circle radius
-        :return: Generator
-        """
-        width = radius * 2
-        height = math.sqrt(3) * radius
-        return ((width / 2 + radius * math.cos(math.radians(60 * i)),
-                 height / 2 + radius * math.sin(math.radians(60 * i))) for i in range(6))
-
-    def paintEvent(self, event: QtGui.QPaintEvent) -> None:
-        """
-        Paint event handler
-        :param event: system generated event
-        :return: None
-        """
-        painter = QtGui.QPainter(self)
-        painter.setPen(self.pen)
-        painter.setBrush(self.brush)
-        painter.drawPolygon(self.polygon)
-        painter.drawText(12, 12, f"{self.text}")
-        painter.end()
-
-
-if __name__ == "__main__":
-    login_data_1 = {
-        "name": "Sorcerer1",
-        "password": "36",
-        "game": "my2121",
-        "num_turns": 45,
-        "num_players": 1,
-        "is_observer": False
-    }
-    app = QtWidgets.QApplication()
-    window = Window(login_data_1)
-    window.show()
-    app.exec()

@@ -5,9 +5,9 @@ from typing import Optional, OrderedDict
 import collections as coll
 
 
-from coordinates import Coordinates
+from logic.coordinates import Coordinates
 from config import game_balance as gb_cf
-from config.actions import Actions
+from config.config import Actions
 
 
 CENTER_POINT = (0, 0, 0)
@@ -255,9 +255,4 @@ class TankModel:
         self.health = health
         self.vehicle_type = model
         self.coordinates = cell
-# <----------------------- attributes for next stages -------------------
         self.shoot_range_bonus = 0
-
-
-if __name__ == "__main__":
-    pass

@@ -1,7 +1,7 @@
 import unittest
 
-from server import Connection
-from config.actions import Actions
+from connection import Connection
+from config.config import Actions
 
 
 class TestConnection(unittest.TestCase):

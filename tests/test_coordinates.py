@@ -1,6 +1,6 @@
 import unittest
 
-from coordinates import Coordinates
+from logic.coordinates import Coordinates
 
 
 class TestCoordinates(unittest.TestCase):

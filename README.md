@@ -9,8 +9,8 @@ To run the app you should run gui.py, login data also in gui.py.
 - Server - creates socket with given parameters, sends binary requests, receives binary responses
 - Connection - instantiates Server object, interacts with server through it, receives commands, and Python objects, encodes it into binary, returns Python objects
 
-**presenter.py** 
-- contains Presenter thread class with main game loop.
+**game.py** 
+- contains Game thread class with main game loop.
 
 **model.py** contains classes to parse and store game data:
 - GameMap - parse and store static game map objects
@@ -28,4 +28,4 @@ To run the app you should run gui.py, login data also in gui.py.
 
 **tests folder** contains some unittests.
 
-**gui.py** contains main window, runs Presenter as a thread. Also contains Hex widget class, that represent map cells in main window.
+**gui.py** contains main window, runs Game as a thread. Also contains Hex widget class, that represent map cells in main window.

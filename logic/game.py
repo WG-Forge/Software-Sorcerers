@@ -1,17 +1,17 @@
 """
-This module contains Presenter thread class - mediator that contains main game loop
+This module contains Game thread class - mediator that contains main game loop
 """
 from copy import deepcopy
 
 from PySide6 import QtCore
 
-from server import Connection
-from model import GameState, GameMap, GameActions
-from vehicle import Vehicle
-from config.actions import Actions
+from connection import Connection
+from logic.model import GameState, GameMap, GameActions
+from logic.vehicle import Vehicle
+from config.config import Actions
 
 
-class Presenter(QtCore.QThread):
+class Game(QtCore.QThread):
     """
     Mediator class that contains main game loop,
     runs as a thread called from main window
@@ -106,7 +106,3 @@ class Presenter(QtCore.QThread):
         self.map = GameMap(self.connection.send(Actions.MAP))
         self.init_vehicles()
         self.game_state_updated.emit(self.map, self.game_state)
-
-
-if __name__ == "__main__":
-    pass

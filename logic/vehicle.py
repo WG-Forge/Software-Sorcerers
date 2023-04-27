@@ -4,10 +4,10 @@ This Module contents game logic only, it does not store any data.
 from typing import Optional, Union
 import random
 
-from coordinates import Coordinates
-from model import TankModel, GameState, GameMap
+from logic.coordinates import Coordinates
+from logic.model import TankModel, GameState, GameMap
 from config import game_balance as gb_cf
-from config.actions import Actions
+from config.config import Actions
 
 
 class Vehicle:
@@ -40,8 +40,8 @@ class Vehicle:
         max_radius = self.max_shoot_range + self.model.shoot_range_bonus
         return self.model.coordinates.in_radius_excl(self.min_range, max_radius)
 
-    def targets_in_range(self, state: GameState, map_: GameMap
-                         ) -> Union[set, set[Coordinates]]:
+    def targets_in_range(self, state: GameState, map_: GameMap)\
+            -> Union[set, set[Coordinates]]:
         """
         Returns cells with non-neutral player
         tanks that are in range of current tank
@@ -69,7 +69,8 @@ class Vehicle:
         return Actions.MOVE, {"vehicle_id": self.t_id,
                               "target": {"x": cell[0], "y": cell[1], "z": cell[2]}}
 
-    def choose_target(self, targets: set[Coordinates], state: GameState) -> Coordinates:
+    def choose_target(self, targets: set[Coordinates], state: GameState)\
+            -> Coordinates:
         """
         Choose target from given set of available
         targets, according to given GameState
@@ -82,8 +83,8 @@ class Vehicle:
                 return target
         return targets.pop()
 
-    def make_turn(self, state: GameState, map_: GameMap
-                  ) -> Optional[tuple[Actions, dict]]:
+    def make_turn(self, state: GameState, map_: GameMap)\
+            -> Optional[tuple[Actions, dict]]:
         """
         Main method to provide vehicle action, returns
         Python obj with SHOOT or MOVE action | None
@@ -104,7 +105,8 @@ class Vehicle:
 
     def set_priority(self, state: GameState, map_: GameMap) -> None:
         """
-        Method set priority cell to move for current vehicle, according to game situation
+        Method set priority cell to move for current vehicle,
+        according to game situation
         :param state: GameState obj
         :param map_: GameMap obj
         :return: None
@@ -123,8 +125,8 @@ class Vehicle:
             free_cells = map_.available_cells.difference(state.tank_cells)
             self.priority = random.choice(list(free_cells.difference(map_.base)))
 
-    def move_to_priority(self, map_: GameMap, state: GameState
-                         ) -> Optional[tuple[Actions, dict]]:
+    def move_to_priority(self, map_: GameMap, state: GameState)\
+            -> Optional[tuple[Actions, dict]]:
         """
         Method finds path to priority, and call move action
         with reachable empty cell on the path to priority,
@@ -197,8 +199,8 @@ class AtSpg(Vehicle):
     specific strategy for AtSpg
     """
 
-    def targets_in_range(self, state: GameState, map_: GameMap
-                         ) -> Union[set, set[Coordinates]]:
+    def targets_in_range(self, state: GameState, map_: GameMap)\
+            -> Union[set, set[Coordinates]]:
         """
         Overloads shooting mechanic for atSPG, return set of cells on available directions
         that contains aggressive tanks
@@ -212,8 +214,8 @@ class AtSpg(Vehicle):
                 targets.update(direction)
         return targets
 
-    def choose_target(self, targets: set[Coordinates],
-                      state: GameState) -> Coordinates:
+    def choose_target(self, targets: set[Coordinates], state: GameState)\
+            -> Coordinates:
         """
         Choose direction with maximum number of available targets
         :param targets: list that contains sets of Coordinates, each set - direction
@@ -224,8 +226,8 @@ class AtSpg(Vehicle):
                                    direction in self.cells_in_range()), key=len)
         return max_enemy_direction.intersection(self.model.coordinates.neighbours()).pop()
 
-    def range_exclude_walls(self, map_: GameMap, directions: list[set[Coordinates]]
-                            ) -> list[set[Coordinates]]:
+    def range_exclude_walls(self, map_: GameMap, directions: list[set[Coordinates]])\
+            -> list[set[Coordinates]]:
         """
         Exclude cells that are behind the obstacles from atSPG shoot directions
         :param map_: GameMap obj
