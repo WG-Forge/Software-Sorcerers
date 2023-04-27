@@ -23,7 +23,7 @@ class Window(QtWidgets.QMainWindow):
         self.presenter_thread = Presenter(login_data)
         self.presenter_thread.start()
         self.screen = QtWidgets.QApplication.screenAt(self.pos())
-        self.setGeometry(0, 0, self.screen.size().width()//2, self.screen.size().height()//1.1)
+        self.setGeometry(0, 0, self.screen.size().width()//2, self.screen.size().height())
         self.setFixedSize(self.size())
         self.hex_outer_radius = None
         self.init_signals()

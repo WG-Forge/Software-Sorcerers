@@ -4,7 +4,7 @@ add new methods to work with coordinate tuples
 """
 from itertools import permutations as perm
 from collections import namedtuple
-from heapq import merge
+from typing import Tuple, List, Set
 
 
 class Coordinates(tuple):
@@ -12,7 +12,7 @@ class Coordinates(tuple):
     Extend standard tuple class implements new methods
     to work with coordinate tuples
     """
-    def __init__(self, hex_: tuple[int, int, int]):
+    def __init__(self, hex_: Tuple[int, int, int]):
         if not isinstance(hex_, tuple):
             raise TypeError("Should pass a tuple of coordinates into Coordinates")
         if not len(hex_) == 3:
@@ -29,7 +29,7 @@ class Coordinates(tuple):
         """
         return max(abs(i - j) for i, j in zip(self, other))
 
-    def offset(self, offset_: tuple[int, int, int]) -> "Coordinates":
+    def offset(self, offset_: Tuple[int, int, int]) -> "Coordinates":
         """
         :param offset_: coordinate offset tuple (dx, dy, dz)
         :return: Coordinates obj
@@ -43,7 +43,7 @@ class Coordinates(tuple):
         """
         return set(self.offset(direction) for direction in perm(range(-1, 2), 3))
 
-    def in_radius(self, radius: int) -> set["Coordinates"]:
+    def in_radius(self, radius: int) -> Set["Coordinates"]:
         """
         :param radius: radius of circle
         :return: set of Coordinates obj in given radius from self, includes self
@@ -66,8 +66,12 @@ class Coordinates(tuple):
         y_negative_dir = {self.offset((delta, -delta, 0)) for delta in range(1, radius + 1)}
         z_positive_dir = {self.offset((0, -delta, delta)) for delta in range(1, radius + 1)}
         z_negative_dir = {self.offset((0, delta, -delta)) for delta in range(1, radius + 1)}
-        return [x_positive_dir, x_negative_dir, y_positive_dir,
-                y_negative_dir, z_positive_dir, z_negative_dir]
+        return [x_positive_dir,
+                x_negative_dir,
+                y_positive_dir,
+                y_negative_dir,
+                z_positive_dir,
+                z_negative_dir]
 
     def in_radius_excl(self, small_radius: int, big_radius: int):
         """
@@ -77,8 +81,8 @@ class Coordinates(tuple):
         """
         return self.in_radius(big_radius).difference(self.in_radius(small_radius))
 
-    def a_star(self, map_cells: set["Coordinates"],
-               finish: "Coordinates") -> list["Coordinates"]:
+    def a_star(self, map_cells: Set["Coordinates"],
+               finish: "Coordinates") -> List["Coordinates"]:
         """
         A* pathfinding algorithm
         :param map_cells: set of available map cells excluding spawn points, obstacles
@@ -98,20 +102,14 @@ class Coordinates(tuple):
         reachable = [start, ]
         explored = set()
         while reachable:
-            current_node = reachable.pop(0)
+            current_node = min(reachable, key=lambda x: self.cube_distance(finish))
+            reachable.remove(current_node)
             if current_node.cell == finish:
                 return build_path(current_node)
             explored.add(current_node.cell)
             new_nodes =\
                 list(current_node.cell.neighbours().difference(explored).intersection(map_cells))
-            tmp = []
             for node in new_nodes:
                 if node not in (i.cell for i in reachable):
                     node = Node(node, current_node)
-                    tmp.append(node)
-            tmp.sort(key=lambda x: self.cube_distance(finish))
-            reachable = list(merge(reachable, tmp, key=lambda x: self.cube_distance(finish)))
-
-
-if __name__ == "__main__":
-    pass
+                    reachable.append(node)

@@ -96,6 +96,7 @@ class Vehicle:
         if targets:
             target = self.choose_target(targets, state)
             return self.shoot(target)
+
         self.set_priority(state, map_)
         if self.priority:
             return self.move_to_priority(map_, state)
@@ -112,10 +113,12 @@ class Vehicle:
         if is_in_base:
             self.priority = None
             return
+
         our_tanks_in_base = state.get_our_tanks_cells().intersection(map_.base)
         empty_base_cells = map_.base.difference(state.tank_cells)
         if empty_base_cells and len(our_tanks_in_base) < 2:
             self.priority = empty_base_cells.pop()
+
         if self.priority is None or self.priority == self.model.coordinates:
             free_cells = map_.available_cells.difference(state.tank_cells)
             self.priority = random.choice(list(free_cells.difference(map_.base)))
@@ -195,7 +198,7 @@ class AtSpg(Vehicle):
     """
 
     def targets_in_range(self, state: GameState, map_: GameMap
-                         ) -> Union[set, set[tuple[int, int, int]]]:
+                         ) -> Union[set, set[Coordinates]]:
         """
         Overloads shooting mechanic for atSPG, return set of cells on available directions
         that contains aggressive tanks
