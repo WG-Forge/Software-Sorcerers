@@ -7,10 +7,10 @@ import math
 from PySide6 import QtWidgets, QtGui
 
 import GUI.ui as ui
-from logic.coordinates import Coordinates
 from GUI.hex_widget import Hex
-from logic.model import GameMap, GameState
+from logic.coordinates import Coordinates
 from logic.game import Game
+from logic.model import GameMap, GameState
 
 
 class Window(QtWidgets.QMainWindow):
@@ -23,8 +23,8 @@ class Window(QtWidgets.QMainWindow):
         self.presenter_thread = Game(login_data)
         self.presenter_thread.start()
         self.screen = QtWidgets.QApplication.screenAt(self.pos())
-        self.setGeometry(0, 0, self.screen.size().width() // ui.SCREEN_TO_WINDOW_WIDTH_RATIO
-                         , self.screen.size().height() // ui.SCREEN_TO_WINDOW_HIGH_RATIO)
+        self.setGeometry(0, 0, self.screen.size().width() // ui.SCREEN_TO_WINDOW_WIDTH_RATIO,
+                         self.screen.size().height() // ui.SCREEN_TO_WINDOW_HIGH_RATIO)
         self.setFixedSize(self.size())
         self.hex_outer_radius = None
         self.init_signals()
@@ -62,8 +62,8 @@ class Window(QtWidgets.QMainWindow):
         :param cell: Coordinates obj
         :return: pixels shift (x, y)
         """
-        shift_x = self.hex_outer_radius * (3 / 2 * cell[0])
-        shift_y = self.hex_outer_radius * (math.sqrt(3) / 2 * cell[0] + math.sqrt(3) * cell[1])
+        shift_x = self.hex_outer_radius * (3 / 2 * cell.x)
+        shift_y = self.hex_outer_radius * (math.sqrt(3) / 2 * cell.x + math.sqrt(3) * cell.y)
         return shift_x, shift_y
 
     def refresh_map(self, map_: GameMap, state: GameState) -> None:

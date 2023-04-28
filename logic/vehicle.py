@@ -1,13 +1,13 @@
 """
 This Module contents game logic only, it does not store any data.
 """
-from typing import Optional, Union
 import random
+from typing import Optional, Union
 
-from logic.coordinates import Coordinates
-from logic.model import TankModel, GameState, GameMap
 from config import game_balance as gb_cf
 from config.config import Actions
+from logic.coordinates import Coordinates
+from logic.model import TankModel, GameState, GameMap
 
 
 class Vehicle:
@@ -58,7 +58,7 @@ class Vehicle:
         :return: Python obj SHOOT action
         """
         return Actions.SHOOT, {"vehicle_id": self.t_id,
-                               "target": {"x": target[0], "y": target[1], "z": target[2]}}
+                               "target": {"x": target.x, "y": target.y, "z": target.z}}
 
     def move(self, cell: Coordinates) -> tuple[Actions, dict]:
         """
@@ -67,7 +67,7 @@ class Vehicle:
         :return: Pyhon obj MOVE action
         """
         return Actions.MOVE, {"vehicle_id": self.t_id,
-                              "target": {"x": cell[0], "y": cell[1], "z": cell[2]}}
+                              "target": {"x": cell.x, "y": cell.y, "z": cell.z}}
 
     def choose_target(self, targets: set[Coordinates], state: GameState)\
             -> Coordinates:

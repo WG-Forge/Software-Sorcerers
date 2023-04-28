@@ -1,26 +1,25 @@
 """
-This module contains Coordinates class, that inherit from tuple,
-add new methods to work with coordinate tuples
+This module contains Coordinates dataclass,
+it provides methods to work with coordinate cells
 """
-from itertools import permutations
+import dataclasses
 from collections import namedtuple
+from itertools import permutations
 from typing import Tuple, List, Set
 
 
-class Coordinates(tuple):
+@dataclasses.dataclass(frozen=True, eq=True, match_args=True)
+class Coordinates:
     """
-    Extend standard tuple class implements new methods
-    to work with coordinate tuples
+    Dataclass that represents coordinate cell, provide
+    methods to work with cubic coordinates
     """
-    def __init__(self, hex_: Tuple[int, int, int]):
-        if not isinstance(hex_, tuple):
-            raise TypeError("Should pass a tuple of coordinates into Coordinates")
-        if not len(hex_) == 3:
-            raise TypeError("Tuple should have exactly 3 coordinates")
-        if all(isinstance(i, int) for i in hex_):
-            super().__init__()
-        else:
-            raise TypeError("Coordinates should be integers")
+    x: int
+    y: int
+    z: int
+
+    def __iter__(self):
+        return iter(dataclasses.astuple(self))
 
     def cube_distance(self, other) -> int:
         """
@@ -34,8 +33,7 @@ class Coordinates(tuple):
         :param offset_: coordinate offset tuple (dx, dy, dz)
         :return: Coordinates obj
         """
-        result = tuple(i + j for i, j in zip(self, offset_))
-        return Coordinates(result)
+        return Coordinates(*(i + j for i, j in zip(self, offset_)))
 
     def neighbours(self) -> set["Coordinates"]:
         """

@@ -5,10 +5,10 @@ from copy import deepcopy
 
 from PySide6 import QtCore
 
+from config.config import Actions
 from connection import Connection
 from logic.model import GameState, GameMap, GameActions
 from logic.vehicle import Vehicle
-from config.config import Actions
 
 
 class Game(QtCore.QThread):
