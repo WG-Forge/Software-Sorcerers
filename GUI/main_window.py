@@ -23,8 +23,12 @@ class Window(QtWidgets.QMainWindow):
         self.presenter_thread = Game(login_data)
         self.presenter_thread.start()
         self.screen = QtWidgets.QApplication.screenAt(self.pos())
-        self.setGeometry(0, 0, self.screen.size().width() // ui.SCREEN_TO_WINDOW_WIDTH_RATIO,
-                         self.screen.size().height() // ui.SCREEN_TO_WINDOW_HIGH_RATIO)
+        self.setGeometry(
+            0,
+            0,
+            self.screen.size().width() // ui.SCREEN_TO_WINDOW_WIDTH_RATIO,
+            self.screen.size().height() // ui.SCREEN_TO_WINDOW_HIGH_RATIO,
+        )
         self.setFixedSize(self.size())
         self.hex_outer_radius = None
         self.init_signals()
@@ -52,8 +56,9 @@ class Window(QtWidgets.QMainWindow):
         :param map_size: game map size (max coordinate value)
         :return: None
         """
-        self.hex_outer_radius = \
-            min(self.size().height() / (4 * map_size), self.size().height() / (4 * map_size))
+        self.hex_outer_radius = min(
+            self.size().height() / (4 * map_size), self.size().height() / (4 * map_size)
+        )
 
     def hex_to_pixel(self, cell: Coordinates) -> tuple[int, int]:
         """
@@ -63,7 +68,9 @@ class Window(QtWidgets.QMainWindow):
         :return: pixels shift (x, y)
         """
         shift_x = self.hex_outer_radius * (3 / 2 * cell.x)
-        shift_y = self.hex_outer_radius * (math.sqrt(3) / 2 * cell.x + math.sqrt(3) * cell.y)
+        shift_y = self.hex_outer_radius * (
+            math.sqrt(3) / 2 * cell.x + math.sqrt(3) * cell.y
+        )
         return shift_x, shift_y
 
     def refresh_map(self, map_: GameMap, state: GameState) -> None:

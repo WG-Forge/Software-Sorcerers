@@ -16,20 +16,25 @@ class GameMap:
     """
     Data class to parse and store static game objects from GAME_MAP response
     """
+
     def __init__(self, data: dict):
         self.size = data["size"]
         self.name = data["name"]
         self.cells = Coordinates(*CENTER_POINT).in_radius(self.size - 1)
         self.obstacles = self.parse_obstacles(data["content"])
         self.spawn_points = self.parse_spawn_points(data["spawn_points"])
-        self.available_cells = self.cells.difference(self.obstacles.union(self.spawn_points))
-        self.base = {Coordinates(i["x"], i["y"], i["z"]) for i in data["content"]["base"]}
+        self.available_cells = self.cells.difference(
+            self.obstacles.union(self.spawn_points)
+        )
+        self.base = {
+            Coordinates(i["x"], i["y"], i["z"]) for i in data["content"]["base"]
+        }
 
-# <----------------------- attributes for next stages -------------------
-#         self.light_repairs = self.parse_light_repairs(data["content"])
-#         self.hard_repairs = self.parse_hard_repairs(data["content"])
-#         self.catapults = self.parse_catapults(data["content"])
-# <------------------- end of attributes for next stages ----------------
+    # <----------------------- attributes for next stages -------------------
+    #         self.light_repairs = self.parse_light_repairs(data["content"])
+    #         self.hard_repairs = self.parse_hard_repairs(data["content"])
+    #         self.catapults = self.parse_catapults(data["content"])
+    # <------------------- end of attributes for next stages ----------------
 
     @staticmethod
     def parse_obstacles(content: dict) -> set[Optional[Coordinates]]:
@@ -39,7 +44,9 @@ class GameMap:
         :return: set of obstacle Coordinates
         """
         if "obstacle" in content:
-            return {Coordinates(obs["x"], obs["y"], obs["z"]) for obs in content["obstacle"]}
+            return {
+                Coordinates(obs["x"], obs["y"], obs["z"]) for obs in content["obstacle"]
+            }
         return set()  # Here is not used None to avoid TypeError in self.available_cells
 
     @staticmethod
@@ -53,8 +60,11 @@ class GameMap:
         for player_vehicles in spawn_points:
             for list_of_spawn_points in player_vehicles.values():
                 for point in list_of_spawn_points:
-                    spawn_points_set.add(Coordinates(point["x"], point["y"], point["z"]))
+                    spawn_points_set.add(
+                        Coordinates(point["x"], point["y"], point["z"])
+                    )
         return spawn_points_set
+
 
 # <----------------------- methods for next stages ---------------------
 #     @staticmethod
@@ -84,6 +94,7 @@ class GameState:
     players turn to avoid move collisions, and shooting
     units destroyed by previous tank
     """
+
     def __init__(self, data: dict, idx: int):
         self.idx = idx
         self.current_turn = data["current_turn"]
@@ -109,7 +120,9 @@ class GameState:
         for tank_id, i in vehicles.items():
             if i["player_id"] == idx:
                 tank_id = int(tank_id)
-                position = Coordinates(i["position"]["x"], i["position"]["y"], i["position"]["z"])
+                position = Coordinates(
+                    i["position"]["x"], i["position"]["y"], i["position"]["z"]
+                )
                 health = i["health"]
                 model = i["vehicle_type"]
                 tanks_dict[tank_id] = TankModel(health, model, position)
@@ -129,8 +142,10 @@ class GameState:
             sorting_key = 0
         else:
             sorting_key = 1
-        sorted_items = sorted(self.our_tanks.items(),
-                              key=lambda x: abs(dataclasses.astuple(x[1].coordinates)[sorting_key]))
+        sorted_items = sorted(
+            self.our_tanks.items(),
+            key=lambda x: abs(dataclasses.astuple(x[1].coordinates)[sorting_key]),
+        )
         ordered_tanks = coll.OrderedDict()
         for key, value in sorted_items:
             ordered_tanks[key] = value
@@ -143,8 +158,10 @@ class GameState:
         :param vehicles: dict with "vehicles" part of GAME_STATE response
         :return: set of tank Coordinates
         """
-        return {Coordinates(i["position"]["x"], i["position"]["y"], i["position"]["z"])
-                for i in vehicles.values()}
+        return {
+            Coordinates(i["position"]["x"], i["position"]["y"], i["position"]["z"])
+            for i in vehicles.values()
+        }
 
     def parse_aggressive_tanks(self, vehicles: dict) -> dict[Coordinates, int]:
         """
@@ -209,7 +226,11 @@ class GameState:
             vehicle_type = self.our_tanks[vehicle_id].vehicle_type
             if vehicle_type == "at_spg":
                 return
-            cell = (data[1]["target"]["x"], data[1]["target"]["y"], data[1]["target"]["z"])
+            cell = (
+                data[1]["target"]["x"],
+                data[1]["target"]["y"],
+                data[1]["target"]["z"],
+            )
             position = Coordinates(*cell)
             if action == Actions.SHOOT:
                 self.aggressive_tanks[position] -= gb_cf.DAMAGE[vehicle_type]
@@ -242,6 +263,7 @@ class GameActions:
     Data class to parse and store data from GAME_ACTIONS response
     Currently not used
     """
+
     def __init__(self, data: dict):
         self.data = data
 
@@ -250,6 +272,7 @@ class TankModel:
     """
     Data class to store dynamic state of tanks
     """
+
     def __init__(self, health: int, model: str, cell: Coordinates):
         self.health = health
         self.vehicle_type = model

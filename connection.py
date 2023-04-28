@@ -14,6 +14,7 @@ class Connection:
     send it to server using socket, receive byte strings,
     and decode them into Python objects
     """
+
     def __init__(self):
         self.sock = socket.socket()
 
@@ -31,7 +32,7 @@ class Connection:
         """
         self.sock.close()
 
-    def send(self, command: cf.Actions,  data: Optional[dict] = None) -> Optional[dict]:
+    def send(self, command: cf.Actions, data: Optional[dict] = None) -> Optional[dict]:
         """
         Took Python objects, encode them into byte strings using translate method,
         send byte strings to server using Server obj,
@@ -61,8 +62,8 @@ class Connection:
             chunks.append(chunk)
             bytes_recd = bytes_recd + len(chunk)
         if status_code != 0:
-            raise RuntimeError(f"{cf.StatusCode(status_code)}", b''.join(chunks))
-        return b''.join(chunks)
+            raise RuntimeError(f"{cf.StatusCode(status_code)}", b"".join(chunks))
+        return b"".join(chunks)
 
     @staticmethod
     def encode(action: cf.Actions, data: Optional[dict] = None) -> bytes:

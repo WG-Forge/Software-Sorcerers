@@ -4,7 +4,7 @@ This module contains constants used in app
 from enum import IntEnum
 
 
-SERVER = 'wgforge-srv.wargaming.net'
+SERVER = "wgforge-srv.wargaming.net"
 PORT = 443
 BUFFER_SIZE = 8192
 
@@ -16,6 +16,7 @@ class StatusCode(IntEnum):
     Defined in client-server interact protocol.
     Could be extended if there will be any changes.
     """
+
     OKEY = 0
     BAD_COMMAND = 1
     ACCESS_DENIED = 2
@@ -32,6 +33,7 @@ class Actions(IntEnum):
     could be extended if there will be any changes in
     game rules or client-server interact protocol.
     """
+
     LOGIN = 1
     LOGOUT = 2
     MAP = 3

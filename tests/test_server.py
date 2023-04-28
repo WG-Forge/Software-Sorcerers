@@ -19,5 +19,5 @@ class TestConnection(unittest.TestCase):
         connection.close_connection()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

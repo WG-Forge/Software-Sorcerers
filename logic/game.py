@@ -16,6 +16,7 @@ class Game(QtCore.QThread):
     Mediator class that contains main game loop,
     runs as a thread called from main window
     """
+
     game_state_updated = QtCore.Signal(object, object)
     game_ended = QtCore.Signal(str)
 
@@ -39,11 +40,11 @@ class Game(QtCore.QThread):
         turn = None
         winner = None
         self.init_game()
-# <---------------------- main loop ---------------------
+        # <---------------------- main loop ---------------------
         while True:
             current_game_state = self.connection.send(Actions.GAME_STATE)
             if current_game_state["finished"]:
-                winner = current_game_state['winner']
+                winner = current_game_state["winner"]
                 break
             if current_game_state["current_turn"] != turn:
                 turn = current_game_state["current_turn"]
@@ -58,7 +59,7 @@ class Game(QtCore.QThread):
                     self.game_state.update_data(vehicle_turn)
                     self.connection.send(*vehicle_turn)
             self.connection.send(Actions.TURN)
-# <-------------------- end of main loop ----------------
+        # <-------------------- end of main loop ----------------
 
         self.game_ended.emit(f"Game ended, winner: {winner}")
         self.connection.send(Actions.LOGOUT)

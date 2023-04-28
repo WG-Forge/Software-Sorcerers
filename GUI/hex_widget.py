@@ -47,8 +47,13 @@ class Hex(QtWidgets.QWidget):
         """
         width = radius * 2
         height = math.sqrt(3) * radius
-        return ((width / 2 + radius * math.cos(math.radians(60 * i)),
-                 height / 2 + radius * math.sin(math.radians(60 * i))) for i in range(6))
+        return (
+            (
+                width / 2 + radius * math.cos(math.radians(60 * i)),
+                height / 2 + radius * math.sin(math.radians(60 * i)),
+            )
+            for i in range(6)
+        )
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         """
