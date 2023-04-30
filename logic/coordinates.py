@@ -122,7 +122,7 @@ class Coordinates:
         ]
         explored = set()
         while reachable:
-            current_node = min(reachable, key=lambda x: self.cube_distance(finish))
+            current_node = min(reachable, key=lambda x: x[0].cube_distance(finish))
             reachable.remove(current_node)
             if current_node.cell == finish:
                 return build_path(current_node)
