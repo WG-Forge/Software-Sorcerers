@@ -7,7 +7,7 @@ from typing import Optional, OrderedDict
 
 from config import game_balance as gb_cf
 from config.config import Actions
-from logic.coordinates import Coordinates
+from logic.cell import Cell
 
 CENTER_POINT = (0, 0, 0)
 
@@ -20,15 +20,13 @@ class GameMap:
     def __init__(self, data: dict):
         self.size = data["size"]
         self.name = data["name"]
-        self.cells = Coordinates(*CENTER_POINT).in_radius(self.size - 1)
+        self.cells = Cell(*CENTER_POINT).in_radius(self.size - 1)
         self.obstacles = self.parse_obstacles(data["content"])
         self.spawn_points = self.parse_spawn_points(data["spawn_points"])
         self.available_cells = self.cells.difference(
             self.obstacles.union(self.spawn_points)
         )
-        self.base = {
-            Coordinates(i["x"], i["y"], i["z"]) for i in data["content"]["base"]
-        }
+        self.base = {Cell(i["x"], i["y"], i["z"]) for i in data["content"]["base"]}
 
     # <----------------------- attributes for next stages -------------------
     #         self.light_repairs = self.parse_light_repairs(data["content"])
@@ -37,32 +35,28 @@ class GameMap:
     # <------------------- end of attributes for next stages ----------------
 
     @staticmethod
-    def parse_obstacles(content: dict) -> set[Optional[Coordinates]]:
+    def parse_obstacles(content: dict) -> set[Optional[Cell]]:
         """
         Handles parsing obstacles from content part of GAME_MAP response
         :param content: dict with content part of GAME_MAP response
-        :return: set of obstacle Coordinates
+        :return: set of obstacle Cell
         """
         if "obstacle" in content:
-            return {
-                Coordinates(obs["x"], obs["y"], obs["z"]) for obs in content["obstacle"]
-            }
+            return {Cell(obs["x"], obs["y"], obs["z"]) for obs in content["obstacle"]}
         return set()  # Here is not used None to avoid TypeError in self.available_cells
 
     @staticmethod
-    def parse_spawn_points(spawn_points: list) -> set[Coordinates]:
+    def parse_spawn_points(spawn_points: list) -> set[Cell]:
         """
         Handles parsing spawn points from spawn points part of GAME_MAP response
         :param spawn_points: dict with spawn points part of GAME_MAP response
-        :return: set of spawn points Coordinates
+        :return: set of spawn points Cell
         """
         spawn_points_set = set()
         for player_vehicles in spawn_points:
             for list_of_spawn_points in player_vehicles.values():
                 for point in list_of_spawn_points:
-                    spawn_points_set.add(
-                        Coordinates(point["x"], point["y"], point["z"])
-                    )
+                    spawn_points_set.add(Cell(point["x"], point["y"], point["z"]))
         return spawn_points_set
 
 
@@ -120,7 +114,7 @@ class GameState:
         for tank_id, i in vehicles.items():
             if i["player_id"] == idx:
                 tank_id = int(tank_id)
-                position = Coordinates(
+                position = Cell(
                     i["position"]["x"], i["position"]["y"], i["position"]["z"]
                 )
                 health = i["health"]
@@ -152,18 +146,18 @@ class GameState:
         return ordered_tanks
 
     @staticmethod
-    def parse_tank_cells(vehicles: dict) -> set[Coordinates]:
+    def parse_tank_cells(vehicles: dict) -> set[Cell]:
         """
         Handle parsing of tank cells from "vehicles" part of GAME_STATE response
         :param vehicles: dict with "vehicles" part of GAME_STATE response
-        :return: set of tank Coordinates
+        :return: set of tank Cell
         """
         return {
-            Coordinates(i["position"]["x"], i["position"]["y"], i["position"]["z"])
+            Cell(i["position"]["x"], i["position"]["y"], i["position"]["z"])
             for i in vehicles.values()
         }
 
-    def parse_aggressive_tanks(self, vehicles: dict) -> dict[Coordinates, int]:
+    def parse_aggressive_tanks(self, vehicles: dict) -> dict[Cell, int]:
         """
         :param vehicles: dict with "vehicles" part of GAME_STATE response
         :return: dict (cell: health) of tanks that we can shoot
@@ -173,10 +167,10 @@ class GameState:
             if i["player_id"] in self.get_non_neutral_players():
                 position = (i["position"]["x"], i["position"]["y"], i["position"]["z"])
                 health = i["health"]
-                aggressive_tanks[Coordinates(*position)] = health
+                aggressive_tanks[Cell(*position)] = health
         return aggressive_tanks
 
-    def parse_enemy_tanks(self, vehicles: dict) -> dict[Coordinates, int]:
+    def parse_enemy_tanks(self, vehicles: dict) -> dict[Cell, int]:
         """
         :param vehicles: dict with "vehicles" part of GAME_STATE response
         :return: dict (cell: health) of enemy tanks
@@ -186,7 +180,7 @@ class GameState:
             if i["player_id"] != self.idx:
                 position = (i["position"]["x"], i["position"]["y"], i["position"]["z"])
                 health = i["health"]
-                enemy_tanks[Coordinates(*position)] = health
+                enemy_tanks[Cell(*position)] = health
         return enemy_tanks
 
     def get_our_tank_id(self, cell) -> int:
@@ -195,9 +189,8 @@ class GameState:
         :return: t_id of our tank in given cell
         """
         for tank_id, model in self.our_tanks.items():
-            if model.coordinates != cell:
-                continue
-            return tank_id
+            if model.coordinates == cell:
+                return tank_id
 
     def get_non_neutral_players(self) -> set[int]:
         """
@@ -231,7 +224,7 @@ class GameState:
                 data[1]["target"]["y"],
                 data[1]["target"]["z"],
             )
-            position = Coordinates(*cell)
+            position = Cell(*cell)
             if action == Actions.SHOOT:
                 self.aggressive_tanks[position] -= gb_cf.DAMAGE[vehicle_type]
                 if self.aggressive_tanks[position] <= 0:
@@ -241,7 +234,7 @@ class GameState:
                 self.tank_cells.add(position)
                 self.our_tanks[vehicle_id].coordinates = position
 
-    def get_aggressive_cells(self) -> set[Coordinates]:
+    def get_aggressive_cells(self) -> set[Cell]:
         """
         returns cells with tanks that we may shoot
         :return: set of cells
@@ -250,7 +243,7 @@ class GameState:
             return set(self.aggressive_tanks)
         return set()
 
-    def get_our_tanks_cells(self) -> set[Coordinates]:
+    def get_our_tanks_cells(self) -> set[Cell]:
         """
         return cells with our tanks
         :return: set of cells
@@ -273,7 +266,7 @@ class TankModel:
     Data class to store dynamic state of tanks
     """
 
-    def __init__(self, health: int, model: str, cell: Coordinates):
+    def __init__(self, health: int, model: str, cell: Cell):
         self.health = health
         self.vehicle_type = model
         self.coordinates = cell

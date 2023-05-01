@@ -22,7 +22,7 @@ To run the app you should run gui.py, login data also in gui.py.
 - Vehicle  - superclass to all vehicle types, has a factory method to instantiate proper type of vehicle
 - VehicleType classes - inherit Vehicle, implements some different logic for each type of vehicle
 
-**coordinates.py** contains Coordinates class - extended tuple to handle some cubic coordinate math operations, and A* pathfinding algorithm.
+**cell.py** contains Cell class - extended tuple to handle some cubic coordinate math operations, and A* pathfinding algorithm.
 
 **config folder** contains config files used in app.
 

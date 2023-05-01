@@ -1,15 +1,14 @@
 """
-This module contains Coordinates dataclass,
+This module contains Cell dataclass,
 it provides methods to work with coordinate cells
 """
 import dataclasses
 from collections import namedtuple
 from itertools import permutations
-from typing import Tuple, List, Set
 
 
 @dataclasses.dataclass(frozen=True, eq=True, match_args=True)
-class Coordinates:
+class Cell:
     """
     Dataclass that represents coordinate cell, provide
     methods to work with cubic coordinates
@@ -24,19 +23,19 @@ class Coordinates:
 
     def cube_distance(self, other) -> int:
         """
-        :param other: Coordinates obj
+        :param other: Cell obj
         :return: distance between hexes
         """
         return max(abs(i - j) for i, j in zip(self, other))
 
-    def offset(self, offset_: Tuple[int, int, int]) -> "Coordinates":
+    def offset(self, offset_: tuple[int, int, int]) -> "Cell":
         """
         :param offset_: coordinate offset tuple (dx, dy, dz)
-        :return: Coordinates obj
+        :return: Cell obj
         """
-        return Coordinates(*(i + j for i, j in zip(self, offset_)))
+        return Cell(*(i + j for i, j in zip(self, offset_)))
 
-    def neighbours(self) -> set["Coordinates"]:
+    def neighbours(self) -> set["Cell"]:
         """
         :return: set of neighbours coordinate tuples
         """
@@ -44,10 +43,10 @@ class Coordinates:
             self.offset(direction) for direction in permutations(range(-1, 2), 3)
         )
 
-    def in_radius(self, radius: int) -> Set["Coordinates"]:
+    def in_radius(self, radius: int) -> set["Cell"]:
         """
         :param radius: radius of circle
-        :return: set of Coordinates obj in given radius from self, includes self
+        :return: set of Cell obj in given radius from self, includes self
         """
         result = set()
         for d_x in range(-radius, radius + 1):
@@ -58,10 +57,10 @@ class Coordinates:
                 result.add(self.offset((d_x, d_y, d_z)))
         return result
 
-    def normal_directions(self, radius: int) -> list[set["Coordinates"], ...]:
+    def normal_directions(self, radius: int) -> list[set["Cell"]]:
         """
         :param radius: maximum cells on each direction
-        :return: list of sets of Coordinates for each normal direction for self, in given radius
+        :return: list of sets of Cell for each normal direction for self, in given radius
         """
         x_positive_dir = {
             self.offset((delta, 0, -delta)) for delta in range(1, radius + 1)
@@ -90,27 +89,25 @@ class Coordinates:
             z_negative_dir,
         ]
 
-    def in_radius_excl(self, small_radius: int, big_radius: int) -> Set["Coordinates"]:
+    def in_radius_excl(self, small_radius: int, big_radius: int) -> set["Cell"]:
         """
         :param small_radius: radius of small circle
         :param big_radius: radius of large circle
-        :return: set of Coordinates in given large circle excluding hexes in small circle
+        :return: set of Cell in given large circle excluding hexes in small circle
         """
         return self.in_radius(big_radius).difference(self.in_radius(small_radius))
 
-    def a_star(
-        self, map_cells: Set["Coordinates"], finish: "Coordinates"
-    ) -> List["Coordinates"]:
+    def a_star(self, map_cells: set["Cell"], finish: "Cell") -> list["Cell"]:
         """
         A* pathfinding algorithm
         :param map_cells: set of available map cells excluding spawn points, obstacles
         :param finish: target cell
-        :return: list with path Coordinates excluding self coordinates
+        :return: list with path Cell excluding self coordinates
         """
-        Node = namedtuple("node", ["cell", "previous"])
+        Node = namedtuple("Node", ["cell", "previous"])
         start = Node(self, None)
 
-        def build_path(to_node):
+        def build_path(to_node: Node) -> list["Cell"]:
             path = []
             while to_node.previous:
                 path.append(to_node.cell)

@@ -17,7 +17,7 @@ class Game(QtCore.QThread):
     runs as a thread called from main window
     """
 
-    game_state_updated = QtCore.Signal(object, object)
+    game_state_updated = QtCore.Signal(GameMap, GameState)
     game_ended = QtCore.Signal(str)
 
     def __init__(self, login_data: dict):
@@ -25,7 +25,7 @@ class Game(QtCore.QThread):
         self.idx = None
         self.login_data = login_data
         self.connection = Connection()
-        self.vehicles_list = []
+        self.vehicles_list: list[Vehicle] = []
         self.game_state = None
         self.game_actions = None
         self.map = None

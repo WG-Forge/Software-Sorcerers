@@ -8,7 +8,7 @@ from PySide6 import QtWidgets, QtGui
 
 import GUI.ui as ui
 from GUI.hex_widget import Hex
-from logic.coordinates import Coordinates
+from logic.cell import Cell
 from logic.game import Game
 from logic.model import GameMap, GameState
 
@@ -18,7 +18,7 @@ class Window(QtWidgets.QMainWindow):
     Main window of user interface
     """
 
-    def __init__(self, login_data, parent=None):
+    def __init__(self, login_data: dict, parent=None):
         super().__init__(parent)
         self.presenter_thread = Game(login_data)
         self.presenter_thread.start()
@@ -39,7 +39,7 @@ class Window(QtWidgets.QMainWindow):
         :return: pixels x, y
         """
         mid_x = self.size().width() // 2
-        mid_y = self.size().height() // 2.2  # Slightly moved to top
+        mid_y = int(self.size().height() / 2.2)  # Slightly moved to top
         return mid_x, mid_y
 
     def init_signals(self) -> None:
@@ -60,18 +60,18 @@ class Window(QtWidgets.QMainWindow):
             self.size().height() / (4 * map_size), self.size().height() / (4 * map_size)
         )
 
-    def hex_to_pixel(self, cell: Coordinates) -> tuple[int, int]:
+    def hex_to_pixel(self, cell: Cell) -> tuple[int, int]:
         """
         Calculates axis shift in pixels of each Hex Widget dependent on
         coordinates relative to central Hex Widget
-        :param cell: Coordinates obj
+        :param cell: Cell obj
         :return: pixels shift (x, y)
         """
         shift_x = self.hex_outer_radius * (3 / 2 * cell.x)
         shift_y = self.hex_outer_radius * (
             math.sqrt(3) / 2 * cell.x + math.sqrt(3) * cell.y
         )
-        return shift_x, shift_y
+        return int(round(shift_x)), int(round(shift_y))
 
     def refresh_map(self, map_: GameMap, state: GameState) -> None:
         """
@@ -97,10 +97,10 @@ class Window(QtWidgets.QMainWindow):
             elif cell in state.get_our_tanks_cells():
                 color = ui.OUR_TANKS_COLOR
                 tank_id = state.get_our_tank_id(cell)
-                text = state.our_tanks[tank_id].health
+                text = str(state.our_tanks[tank_id].health)
             elif cell in state.enemy_tanks:
                 color = ui.ENEMY_COLOR
-                text = state.enemy_tanks[cell]
+                text = str(state.enemy_tanks[cell])
             elif cell in map_.base:
                 color = ui.BASE_COLOR
             elif cell in map_.spawn_points:

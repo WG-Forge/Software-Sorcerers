@@ -4,7 +4,7 @@ main window to display map cells
 """
 import math
 from functools import lru_cache
-from typing import Generator
+from typing import Generator, Optional
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
@@ -16,7 +16,13 @@ class Hex(QtWidgets.QWidget):
     Hexagonal Widget class used to display map cells in main window
     """
 
-    def __init__(self, hex_outer_radius, color, text="", parent=None):
+    def __init__(
+        self,
+        hex_outer_radius: int,
+        color: tuple[int, int, int],
+        text: Optional[str] = "",
+        parent: QtWidgets.QTabWidget = None,
+    ):
         super().__init__(parent)
         self.color = color
         self.text = text
