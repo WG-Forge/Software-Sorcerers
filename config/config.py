@@ -7,6 +7,10 @@ from enum import IntEnum
 SERVER = "wgforge-srv.wargaming.net"
 PORT = 443
 BUFFER_SIZE = 8192
+RESPONSE_HEADER_SIZE = 8
+RESULT_CODE_SIZE = 4
+ACTION_ENCODE_SIZE = 4
+LENGTH_ENCODE_SIZE = 4
 
 
 class StatusCode(IntEnum):
