@@ -122,13 +122,12 @@ class Vehicle:
             self.priority = None
             return
 
-        our_tanks_in_base = state.get_our_tanks_cells().intersection(map_.base)
         empty_base_cells = map_.base.difference(state.tank_cells)
-        if empty_base_cells and len(our_tanks_in_base) < 2:
+        if empty_base_cells:
             self.priority = empty_base_cells.pop()
 
         if self.priority is None or self.priority == self.model.coordinates:
-            free_cells = map_.available_cells.difference(state.tank_cells)
+            free_cells = map_.get_available_cells().difference(state.tank_cells)
             self.priority = random.choice(list(free_cells.difference(map_.base)))
 
     def move_to_priority(
@@ -144,7 +143,7 @@ class Vehicle:
         """
         step_cell = None
         path_to_priority = self.model.coordinates.a_star(
-            map_.available_cells, self.priority
+            map_.get_available_cells(), self.priority
         )
         speed_points = self.speed
         if speed_points >= len(path_to_priority):
