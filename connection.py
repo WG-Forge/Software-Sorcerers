@@ -53,15 +53,20 @@ class Connection:
         :return: byte string
         """
         chunks = []
-        init_read = self.sock.recv(8)
-        status_code = int.from_bytes(init_read[0:4], byteorder="little")
-        msg_len = int.from_bytes(init_read[4:8], byteorder="little")
+        init_read = self.sock.recv(cf.RESPONSE_HEADER_SIZE)
+        status_code = int.from_bytes(
+            init_read[: cf.RESULT_CODE_SIZE], byteorder="little"
+        )
+        msg_len = int.from_bytes(
+            init_read[cf.RESULT_CODE_SIZE : cf.RESPONSE_HEADER_SIZE],
+            byteorder="little",
+        )
         bytes_recd = 0
         while bytes_recd < msg_len:
             chunk = self.sock.recv(min(msg_len - bytes_recd, cf.BUFFER_SIZE))
             chunks.append(chunk)
             bytes_recd = bytes_recd + len(chunk)
-        if status_code != 0:
+        if status_code != cf.StatusCode.OKEY:
             raise RuntimeError(f"{cf.StatusCode(status_code)}", b"".join(chunks))
         return b"".join(chunks)
 
@@ -73,11 +78,11 @@ class Connection:
         :param data: Python dict | None
         :return: byte string
         """
-        b_action = action.to_bytes(4, byteorder="little")
+        b_action = action.to_bytes(cf.ACTION_ENCODE_SIZE, byteorder="little")
         if data is None:
             json_string = ""
         else:
             json_string = json.dumps(data)
-        b_length = len(json_string).to_bytes(4, byteorder="little")
+        b_length = len(json_string).to_bytes(cf.LENGTH_ENCODE_SIZE, byteorder="little")
         message = b_action + b_length + json_string.encode("UTF-8")
         return message
