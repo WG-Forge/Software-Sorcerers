@@ -21,28 +21,24 @@ class GameMap:
         self.size = data["size"]
         self.name = data["name"]
         self.cells = Cell(*CENTER_POINT).in_radius(self.size - 1)
-        self.obstacles = self.parse_obstacles(data["content"])
+        self.obstacles = self.parse_content(data["content"], "obstacle")
         self.spawn_points = self.parse_spawn_points(data["spawn_points"])
-        self.available_cells = self.cells.difference(
-            self.obstacles.union(self.spawn_points)
-        )
-        self.base = {Cell(i["x"], i["y"], i["z"]) for i in data["content"]["base"]}
-
-    # <----------------------- attributes for next stages -------------------
-    #         self.light_repairs = self.parse_light_repairs(data["content"])
-    #         self.hard_repairs = self.parse_hard_repairs(data["content"])
-    #         self.catapults = self.parse_catapults(data["content"])
-    # <------------------- end of attributes for next stages ----------------
+        self.base = self.parse_content(data["content"], "base")
+        self.light_repairs = self.parse_content(data["content"], "light_repair")
+        self.hard_repairs = self.parse_content(data["content"], "hard_repair")
+        self.catapults = self.parse_content(data["content"], "catapult")
 
     @staticmethod
-    def parse_obstacles(content: dict) -> set[Optional[Cell]]:
+    def parse_content(content: dict, content_type: str) -> set[Optional[Cell]]:
         """
         Handles parsing obstacles from content part of GAME_MAP response
         :param content: dict with content part of GAME_MAP response
+        :param content_type: name of content type defined by game rules in
+        client-server interact protocol
         :return: set of obstacle Cell
         """
-        if "obstacle" in content:
-            return {Cell(obs["x"], obs["y"], obs["z"]) for obs in content["obstacle"]}
+        if content_type in content:
+            return {Cell(i["x"], i["y"], i["z"]) for i in content[content_type]}
         return set()  # Here is not used None to avoid TypeError in self.available_cells
 
     @staticmethod
@@ -59,26 +55,25 @@ class GameMap:
                     spawn_points_set.add(Cell(point["x"], point["y"], point["z"]))
         return spawn_points_set
 
+    def get_content_cells(self) -> set[Cell]:
+        """
+        :return: set of cells with static content
+        """
 
-# <----------------------- methods for next stages ---------------------
-#     @staticmethod
-#     def parse_catapults(content: dict) -> Optional[set[tuple[int, int, int]]]:
-#         if not ("catapult" in content):
-#             return None
-#         ...
-#
-#     @staticmethod
-#     def parse_light_repairs(content: dict) -> Optional[set[tuple[int, int, int]]]:
-#         if not ("light_repair" in content):
-#             return None
-#         ...
-#
-#     @staticmethod
-#     def parse_hard_repairs(content: dict) -> Optional[set[tuple[int, int, int]]]:
-#         if not ("light_repair" in content):
-#             return None
-#         ...
-# <------------------ end of methods for next stages ---------------------
+        return set.union(
+            self.base,
+            self.catapults,
+            self.light_repairs,
+            self.hard_repairs,
+            self.obstacles,
+            self.spawn_points,
+        )
+
+    def get_available_cells(self) -> set[Cell]:
+        """
+        :return: set of cells allowed to vehicle move
+        """
+        return self.cells.difference(self.obstacles.union(self.spawn_points))
 
 
 class GameState:
@@ -119,7 +114,11 @@ class GameState:
                 )
                 health = i["health"]
                 model = i["vehicle_type"]
-                tanks_dict[tank_id] = TankModel(health, model, position)
+                shoot_range_bonus = i["shoot_range_bonus"]
+                capture_points = i["capture_points"]
+                tanks_dict[tank_id] = TankModel(
+                    health, model, position, shoot_range_bonus, capture_points
+                )
         return tanks_dict
 
     def get_ordered_tanks(self) -> OrderedDict:
@@ -261,13 +260,14 @@ class GameActions:
         self.data = data
 
 
+@dataclasses.dataclass
 class TankModel:
     """
-    Data class to store dynamic state of tanks
+    Dataclass to store dynamic state of tanks
     """
 
-    def __init__(self, health: int, model: str, cell: Cell):
-        self.health = health
-        self.vehicle_type = model
-        self.coordinates = cell
-        self.shoot_range_bonus = 0
+    health: int
+    vehicle_type: str
+    coordinates: Cell
+    shoot_range_bonus: int
+    capture_points: int
