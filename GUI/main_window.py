@@ -6,11 +6,11 @@ import math
 
 from PySide6 import QtWidgets, QtGui
 
-import GUI.ui as ui
-from GUI.hex_widget import Hex
 from logic.cell import Cell
 from logic.game import Game
 from logic.model import GameMap, GameState
+from GUI import ui
+from GUI.hex_widget import Hex
 
 
 class Window(QtWidgets.QMainWindow):
@@ -86,31 +86,62 @@ class Window(QtWidgets.QMainWindow):
         """
         if self.hex_outer_radius is None:
             self.set_hex_radius(map_.size)
+
         for cell in map_.cells:
             existing_cell = self.findChild(Hex, f"{cell}")
             if existing_cell:
                 existing_cell.setParent(None)
+
             text = ""
             color = ui.HEX_DEFAULT_FILL
-            if cell in map_.obstacles:
-                color = ui.OBSTACLE_COLOR
-            elif cell in state.get_our_tanks_cells():
-                color = ui.OUR_TANKS_COLOR
-                tank_id = state.get_our_tank_id(cell)
-                text = str(state.our_tanks[tank_id].health)
-            elif cell in state.enemy_tanks:
-                color = ui.ENEMY_COLOR
-                text = str(state.enemy_tanks[cell])
-            elif cell in map_.base:
-                color = ui.BASE_COLOR
-            elif cell in map_.spawn_points:
-                color = ui.SPAWN_COLOR
+            if cell in state.tank_cells:
+                text, color = self.get_vehicle_fill(cell, state)
+            elif cell in map_.get_content_cells():
+                text, color = self.get_content_fill(cell, map_)
+
             hex_ = Hex(self.hex_outer_radius, color, text)
             hex_.setParent(self)
             hex_.setObjectName(f"{cell}")
             shift_x, shift_y = self.hex_to_pixel(cell)
             hex_.move(self.get_mid_map()[0] + shift_x, self.get_mid_map()[1] + shift_y)
             hex_.show()
+
+    @staticmethod
+    def get_content_fill(cell: Cell, map_: GameMap) -> tuple[str, tuple[int, int, int]]:
+        """
+        Returns text and colors for drawing content cells,
+        depends on content type
+        :param cell: Cell obj
+        :param map_: GameMap obj
+        :return: tuple(text, color)
+        """
+        if cell in map_.obstacles:
+            return ui.CONTENT_FILL["obstacle"]
+        elif cell in map_.base:
+            return ui.CONTENT_FILL["base"]
+        elif cell in map_.catapults:
+            return ui.CONTENT_FILL["catapult"]
+        elif cell in map_.hard_repairs:
+            return ui.CONTENT_FILL["hard_repair"]
+        elif cell in map_.spawn_points:
+            return ui.CONTENT_FILL["spawn"]
+        else:
+            return ui.CONTENT_FILL["light_repair"]
+
+    @staticmethod
+    def get_vehicle_fill(
+        cell: Cell, state: GameState
+    ) -> tuple[str, tuple[int, int, int]]:
+        """
+        Return text and color for drawing tank cells, depends on tank owner
+        :param cell: Cell obj
+        :param state: GameState obj
+        :return: tuple(text, color)
+        """
+        if cell in state.get_our_tanks_cells():
+            tank_id = state.get_our_tank_id(cell)
+            return str(state.our_tanks[tank_id].health), ui.OUR_TANKS_COLOR
+        return str(state.enemy_tanks[cell]), ui.ENEMY_COLOR
 
     def show_message(self, text: str) -> None:
         """
