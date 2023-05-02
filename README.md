@@ -8,6 +8,8 @@ To run the app you should run main.py, login data also in main.py.
 Or you can run tests/test_multiplayer.py to create three bots in different threads.
 
 ## Module description
+**main.py** entry point with login data
+
 **connection.py** contains Connection class that provides client-server interact
 
 ### logic folder
