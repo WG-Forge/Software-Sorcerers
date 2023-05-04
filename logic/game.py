@@ -2,6 +2,7 @@
 This module contains Game thread class - mediator that contains main game loop
 """
 from copy import deepcopy
+from typing import Optional
 
 from PySide6 import QtCore
 
@@ -22,13 +23,13 @@ class Game(QtCore.QThread):
 
     def __init__(self, login_data: dict):
         super().__init__(None)
-        self.idx = None
+        self.idx: Optional[int] = None
         self.login_data = login_data
         self.connection = Connection()
         self.vehicles_list: list[Vehicle] = []
-        self.game_state = None
-        self.game_actions = None
-        self.map = None
+        self.game_state: Optional[GameState] = None
+        self.game_actions: Optional[GameActions] = None
+        self.map: Optional[GameMap] = None
 
     def run(self) -> None:
         """
@@ -61,7 +62,11 @@ class Game(QtCore.QThread):
             self.connection.send(Actions.TURN)
         # <-------------------- end of main loop ----------------
 
-        self.game_ended.emit(f"Game ended, winner: {winner}")
+        self.game_ended.emit(
+            f"Game ended, you win!"
+            if winner == self.idx
+            else f"You lose, winner = {winner}"
+        )
         self.connection.send(Actions.LOGOUT)
         self.quit()
 

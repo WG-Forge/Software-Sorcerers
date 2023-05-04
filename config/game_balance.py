@@ -1,5 +1,5 @@
 """
-This module contains vehicle characteristics defined by rules
+This module contains game balance characteristics defined by rules
 """
 
 DAMAGE = {"medium_tank": 1, "at_spg": 1, "heavy_tank": 1, "light_tank": 1, "spg": 1}
@@ -8,6 +8,8 @@ MAX_RANGE = {"medium_tank": 2, "at_spg": 3, "heavy_tank": 2, "light_tank": 2, "s
 
 MIN_RANGE = {"medium_tank": 1, "at_spg": 0, "heavy_tank": 0, "light_tank": 1, "spg": 2}
 
+MAX_HP = {"medium_tank": 2, "at_spg": 2, "heavy_tank": 3, "light_tank": 1, "spg": 1}
+
 SPEED_POINTS = {
     "medium_tank": 2,
     "at_spg": 1,
@@ -15,3 +17,6 @@ SPEED_POINTS = {
     "light_tank": 3,
     "spg": 1,
 }
+
+MAX_CATAPULT_USAGE = 3
+MAX_CAPTURE_POINTS = 6

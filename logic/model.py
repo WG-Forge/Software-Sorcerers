@@ -3,7 +3,7 @@ This module contains classes to parse and store game data
 """
 import collections as coll
 import dataclasses
-from typing import Optional, OrderedDict
+from typing import OrderedDict
 
 from config import game_balance as gb_cf
 from config.config import Actions
@@ -29,7 +29,7 @@ class GameMap:
         self.catapults = self.parse_content(data["content"], "catapult")
 
     @staticmethod
-    def parse_content(content: dict, content_type: str) -> set[Optional[Cell]]:
+    def parse_content(content: dict, content_type: str) -> set[Cell]:
         """
         Handles parsing obstacles from content part of GAME_MAP response
         :param content: dict with content part of GAME_MAP response
@@ -39,7 +39,7 @@ class GameMap:
         """
         if content_type in content:
             return {Cell(i["x"], i["y"], i["z"]) for i in content[content_type]}
-        return set()  # Here is not used None to avoid TypeError in self.available_cells
+        return set()
 
     @staticmethod
     def parse_spawn_points(spawn_points: list) -> set[Cell]:
@@ -95,6 +95,7 @@ class GameState:
         self.our_tanks = self.parse_tanks_by_id(data["vehicles"], idx)
         self.tank_cells = self.parse_tank_cells(data["vehicles"])
         self.aggressive_tanks = self.parse_aggressive_tanks(data["vehicles"])
+        self.inactive_catapults = self.parse_inactive_catapults(data["catapult_usage"])
 
     @staticmethod
     def parse_tanks_by_id(vehicles: dict, idx: int) -> dict[int, "TankModel"]:
@@ -116,8 +117,18 @@ class GameState:
                 model = i["vehicle_type"]
                 shoot_range_bonus = i["shoot_range_bonus"]
                 capture_points = i["capture_points"]
+                spawn_point = Cell(
+                    i["spawn_position"]["x"],
+                    i["spawn_position"]["y"],
+                    i["spawn_position"]["z"],
+                )
                 tanks_dict[tank_id] = TankModel(
-                    health, model, position, shoot_range_bonus, capture_points
+                    health,
+                    model,
+                    position,
+                    shoot_range_bonus,
+                    capture_points,
+                    spawn_point,
                 )
         return tanks_dict
 
@@ -169,17 +180,34 @@ class GameState:
                 aggressive_tanks[Cell(*position)] = health
         return aggressive_tanks
 
-    def parse_enemy_tanks(self, vehicles: dict) -> dict[Cell, int]:
+    def parse_enemy_tanks(self, vehicles: dict) -> dict[Cell, "TankModel"]:
         """
         :param vehicles: dict with "vehicles" part of GAME_STATE response
-        :return: dict (cell: health) of enemy tanks
+        :return: dict (cell: EnemyTankModel) of enemy tanks
         """
         enemy_tanks = {}
         for i in vehicles.values():
             if i["player_id"] != self.idx:
-                position = (i["position"]["x"], i["position"]["y"], i["position"]["z"])
+                position = Cell(
+                    i["position"]["x"], i["position"]["y"], i["position"]["z"]
+                )
                 health = i["health"]
-                enemy_tanks[Cell(*position)] = health
+                vehicle_type = i["vehicle_type"]
+                shoot_range_bonus = i["shoot_range_bonus"]
+                capture_points = i["capture_points"]
+                spawn_point = Cell(
+                    i["spawn_position"]["x"],
+                    i["spawn_position"]["y"],
+                    i["spawn_position"]["z"],
+                )
+                enemy_tanks[position] = TankModel(
+                    health,
+                    vehicle_type,
+                    position,
+                    shoot_range_bonus,
+                    capture_points,
+                    spawn_point,
+                )
         return enemy_tanks
 
     def get_our_tank_id(self, cell) -> int:
@@ -206,7 +234,7 @@ class GameState:
                 non_neutral_set.add(int(player))
         return non_neutral_set
 
-    def update_data(self, data: tuple[str, dict]) -> None:
+    def update_data(self, data: tuple[Actions, dict]) -> None:
         """
         updates tanks state for current turn using action provided by vehicle
         :param data: action provided by vehicle in vehicles turn
@@ -249,6 +277,27 @@ class GameState:
         """
         return {vehicle.coordinates for vehicle in self.our_tanks.values()}
 
+    @staticmethod
+    def parse_inactive_catapults(catapult_usage: list) -> set[Cell]:
+        """
+        Parse and return set with cells where located catapults
+        that we cant use so far
+        :param catapult_usage:
+        :return:
+        """
+        list_usage = []
+        for i in catapult_usage:
+            list_usage.append(Cell(*i.values()))
+        return {
+            i for i in list_usage if list_usage.count(i) == gb_cf.MAX_CATAPULT_USAGE
+        }
+
+    def get_total_cp(self) -> int:
+        """
+        :return: total amount of our capture points
+        """
+        return sum(i.capture_points for i in self.our_tanks.values())
+
 
 class GameActions:
     """
@@ -263,7 +312,7 @@ class GameActions:
 @dataclasses.dataclass
 class TankModel:
     """
-    Dataclass to store dynamic state of tanks
+    Dataclass to store dynamic state of our tanks
     """
 
     health: int
@@ -271,3 +320,4 @@ class TankModel:
     coordinates: Cell
     shoot_range_bonus: int
     capture_points: int
+    spawn_point: Cell

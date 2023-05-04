@@ -6,11 +6,11 @@ from PySide6 import QtWidgets
 from GUI.main_window import Window
 
 login_data = {
-    "name": "Sorcerer1",
-    "password": "my_pass",
-    "game": "my_game",
+    "name": "Sorcerer",
+    "password": "42",
+    "game": "test_122",
     "num_turns": 45,
-    "num_players": 1,
+    "num_players": 3,
     "is_observer": False,
 }
 

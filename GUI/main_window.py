@@ -141,7 +141,7 @@ class Window(QtWidgets.QMainWindow):
         if cell in state.get_our_tanks_cells():
             tank_id = state.get_our_tank_id(cell)
             return str(state.our_tanks[tank_id].health), ui.OUR_TANKS_COLOR
-        return str(state.enemy_tanks[cell]), ui.ENEMY_COLOR
+        return str(state.enemy_tanks[cell].health), ui.ENEMY_COLOR
 
     def show_message(self, text: str) -> None:
         """

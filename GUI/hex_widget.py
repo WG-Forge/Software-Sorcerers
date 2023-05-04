@@ -21,7 +21,7 @@ class Hex(QtWidgets.QWidget):
         hex_outer_radius: int,
         color: tuple[int, int, int],
         text: Optional[str] = "",
-        parent: QtWidgets.QTabWidget = None,
+        parent: Optional[QtWidgets.QTabWidget] = None,
     ):
         super().__init__(parent)
         self.color = color
