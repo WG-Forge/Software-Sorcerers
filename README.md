@@ -8,6 +8,8 @@ To run the app you should run main.py, login data also in main.py.
 Or you can run tests/test_multiplayer.py to create three bots in different threads.
 
 ## Module description
+**main.py** entry point with login data
+
 **connection.py** contains Connection class that provides client-server interact
 
 ### logic folder
@@ -20,7 +22,7 @@ Or you can run tests/test_multiplayer.py to create three bots in different threa
 - TankModel - dataclass that store dynamic state of each our tank
 
 **vehicle.py** contains classes that handles bot turn logic:
-- Vehicle  - superclass to all vehicle types, has a factory method to instantiate proper type of vehicle
+- Vehicle  - superclass to all vehicle types, has a factory method to instantiate proper type of vehicle, implements common behavior of vehicles
 - VehicleType classes - inherit Vehicle, implements some different logic for each type of vehicle
 
 **cell.py** contains Cell class - dataclass with methods that handles cubic coordinate math operations, and A* pathfinding algorithm.
