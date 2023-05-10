@@ -8,30 +8,33 @@ from GUI.main_window import Window
 from logic.game import Game
 
 login_data_1 = {
-    "name": "Sorcerer1",
+    "name": "Sorcerer121",
     "password": "42",
-    "game": "test_multiplayer",
+    "game": "sorcer",
     "num_turns": 45,
     "num_players": 3,
     "is_observer": False,
+    "is_full": True
 }
 
 login_data_2 = {
-    "name": "Sorcerer2",
+    "name": "Sorcerer221",
     "password": "42",
-    "game": "test_multiplayer",
+    "game": "sorcer",
     "num_turns": 45,
     "num_players": 3,
     "is_observer": False,
+    "is_full": True
 }
 
 login_data_3 = {
-    "name": "Sorcerer3",
+    "name": "Sorcerer321",
     "password": "42",
-    "game": "test_multiplayer",
+    "game": "sorcer",
     "num_turns": 45,
     "num_players": 3,
     "is_observer": False,
+    "is_full": True
 }
 
 if __name__ == "__main__":

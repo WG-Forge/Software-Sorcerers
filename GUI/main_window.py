@@ -4,7 +4,7 @@ This module contains implementation of main window, using PySide6
 """
 import math
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from logic.cell import Cell
 from logic.game import Game
@@ -17,6 +17,7 @@ class Window(QtWidgets.QMainWindow):
     """
     Main window of user interface
     """
+    closed = QtCore.Signal()
 
     def __init__(self, login_data: dict, parent=None):
         super().__init__(parent)
@@ -179,4 +180,5 @@ class Window(QtWidgets.QMainWindow):
         :param event: system generated event
         :return: None
         """
+        self.closed.emit()
         self.presenter_thread.exit()

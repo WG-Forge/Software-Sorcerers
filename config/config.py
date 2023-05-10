@@ -6,7 +6,7 @@ from enum import IntEnum
 
 SERVER = "wgforge-srv.wargaming.net"
 PORT = 443
-BUFFER_SIZE = 8192
+BUFFER_SIZE = 2048
 RESPONSE_HEADER_SIZE = 8
 RESULT_CODE_SIZE = 4
 ACTION_ENCODE_SIZE = 4
@@ -47,3 +47,14 @@ class Actions(IntEnum):
     CHAT = 100
     MOVE = 101
     SHOOT = 102
+
+
+DEFAULT_LOGIN = {
+    "name": "SorcererBot",
+    "password": "42",
+    "game": "test_122",
+    "num_turns": 45,
+    "num_players": 1,
+    "is_observer": False,
+    "is_full": False
+}

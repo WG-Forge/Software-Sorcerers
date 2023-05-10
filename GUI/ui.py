@@ -17,3 +17,5 @@ CONTENT_FILL = {
     "light_repair": ("LR", (128, 135, 102)),
     "spawn": ("", (160, 160, 160)),
 }
+STATISTICS_LABEL_OFFSET = (10, 0)
+LOGIN_LABEL_WIDTH = 150

@@ -20,6 +20,7 @@ class Game(QtCore.QThread):
 
     game_state_updated = QtCore.Signal(GameMap, GameState)
     game_ended = QtCore.Signal(str)
+    update = QtCore.Signal(str)
 
     def __init__(self, login_data: dict):
         super().__init__(None)
@@ -30,6 +31,8 @@ class Game(QtCore.QThread):
         self.game_state: Optional[GameState] = None
         self.game_actions: Optional[GameActions] = None
         self.map: Optional[GameMap] = None
+        self.game_statistic = {"Draws": 0,
+                               "Your wins": 0}
 
     def run(self) -> None:
         """
@@ -39,45 +42,42 @@ class Game(QtCore.QThread):
         :return: None
         """
         turn = None
-        winner = None
         self.init_game()
+
         # <---------------------- main loop ---------------------
-        while True:
-            current_game_state = self.connection.send(Actions.GAME_STATE)
-            if current_game_state["finished"]:
-                winner = current_game_state["winner"]
-                break
-            if current_game_state["current_turn"] != turn:
-                turn = current_game_state["current_turn"]
-                self.refresh_game_state(current_game_state)
-                self.game_state_updated.emit(self.map, deepcopy(self.game_state))
-            if current_game_state["current_player_idx"] != self.idx:
+        while not (self.game_state.is_last_round() and self.game_state.is_finished):
+            self.refresh_game_state()
+            while True:
+                self.refresh_game_state()
+                if self.game_state.is_finished:
+                    self.update_statistic()
+                    self.update.emit(str(self.game_statistic))
+                    if not self.game_state.is_last_round():
+                        self.connection.send(Actions.TURN)
+                    break
+                if self.game_state.current_turn != turn:
+                    turn = self.game_state.current_turn
+                    self.game_state_updated.emit(self.map, deepcopy(self.game_state))
+                if self.game_state.current_player != self.idx:
+                    self.connection.send(Actions.TURN)
+                    continue
+                self.make_turn()
                 self.connection.send(Actions.TURN)
-                continue
-            for vehicle in self.vehicles_list:
-                vehicle_turn = vehicle.make_turn(self.game_state, self.map)
-                if vehicle_turn:
-                    self.game_state.update_data(vehicle_turn)
-                    self.connection.send(*vehicle_turn)
-            self.connection.send(Actions.TURN)
         # <-------------------- end of main loop ----------------
 
-        self.game_ended.emit(
-            f"Game ended, you win!"
-            if winner == self.idx
-            else f"You lose, winner = {winner}"
-        )
+        self.game_ended.emit(str(self.game_statistic))
         self.connection.send(Actions.LOGOUT)
+        self.connection.close_connection()
         self.quit()
 
-    def refresh_game_state(self, game_state: dict) -> None:
+    def refresh_game_state(self) -> None:
         """
         Method that creates GameState obj from GAME_STATE dict response,
         and refreshes self.game_state
         :param game_state: GAME_STATE dict response
         :return: None
         """
-        self.game_state = GameState(game_state, self.idx)
+        self.game_state = GameState(self.connection.send(Actions.GAME_STATE), self.idx)
 
     def refresh_game_actions(self) -> None:
         """
@@ -96,6 +96,13 @@ class Game(QtCore.QThread):
         for t_id, spec in self.game_state.get_ordered_tanks().items():
             self.vehicles_list.append(Vehicle.build(t_id, spec))
 
+    def make_turn(self) -> None:
+        for vehicle in self.vehicles_list:
+            vehicle_turn = vehicle.make_turn(self.game_state, self.map)
+            if vehicle_turn:
+                self.game_state.update_data(vehicle_turn)
+                self.connection.send(*vehicle_turn)
+
     def init_game(self) -> None:
         """
         Provides such actions at the beginning of the game: starts connection,
@@ -105,10 +112,21 @@ class Game(QtCore.QThread):
         update
         :return: None
         """
+
         self.connection.init_connection()
         login_answer = self.connection.send(Actions.LOGIN, self.login_data)
         self.idx = login_answer["idx"]
-        self.refresh_game_state(self.connection.send(Actions.GAME_STATE))
+        self.refresh_game_state()
         self.map = GameMap(self.connection.send(Actions.MAP))
         self.init_vehicles()
-        self.game_state_updated.emit(self.map, self.game_state)
+
+    def update_statistic(self):
+        winner = self.game_state.winner
+        if winner is None:
+            self.game_statistic["Draws"] += 1
+        elif winner == self.idx:
+            self.game_statistic["Your wins"] += 1
+        elif winner in self.game_statistic:
+            self.game_statistic[winner] += 1
+        else:
+            self.game_statistic[winner] = 1

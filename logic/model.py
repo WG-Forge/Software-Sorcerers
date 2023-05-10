@@ -86,7 +86,12 @@ class GameState:
 
     def __init__(self, data: dict, idx: int):
         self.idx = idx
+        self.winner = data["winner"]
         self.current_turn = data["current_turn"]
+        self.is_finished = data["finished"]
+        self.round = data["current_round"]
+        self.num_rounds = data["num_rounds"]
+        self.current_player = data["current_player_idx"]
         self.attack_matrix = data["attack_matrix"]
 
         self.attack_matrix.pop(str(self.idx))
@@ -297,6 +302,12 @@ class GameState:
         :return: total amount of our capture points
         """
         return sum(i.capture_points for i in self.our_tanks.values())
+
+    def is_last_round(self) -> bool:
+        """
+        Check is current round last in full game
+        """
+        return self.round == self.num_rounds
 
 
 class GameActions:
