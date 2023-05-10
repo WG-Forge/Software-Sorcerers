@@ -54,7 +54,6 @@ class Window(QtWidgets.QMainWindow):
         self.presenter_thread.game_ended.connect(self.show_message)
         self.presenter_thread.update.connect(self.update_statistics)
 
-
     def init_statistics(self) -> None:
         """
         Initiates statistic label
