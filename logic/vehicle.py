@@ -348,7 +348,10 @@ class HeavyTank(Vehicle):
         :param map_: GameMap obj
         :return: None
         """
-        if not self.is_capturing_base(state, map_) and self.model.health == 1:
+        if (
+            not self.is_capturing_base(state, map_)
+            and self.model.health != gb_cf.MAX_HP[self.model.vehicle_type]
+        ):
             self.priority = min(
                 map_.hard_repairs, key=self.model.coordinates.cube_distance
             )
