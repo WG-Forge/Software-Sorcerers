@@ -31,6 +31,9 @@ class Window(QtWidgets.QMainWindow):
         )
         self.setFixedSize(self.size())
         self.hex_outer_radius = None
+        self.statistics_label = QtWidgets.QLabel(self)
+        self.login_window = LoginWindow()
+        self.init_statistics()
         self.init_signals()
 
     def get_mid_map(self) -> tuple[int, int]:
@@ -49,6 +52,17 @@ class Window(QtWidgets.QMainWindow):
         """
         self.presenter_thread.game_state_updated.connect(self.refresh_map)
         self.presenter_thread.game_ended.connect(self.show_message)
+        self.presenter_thread.update.connect(self.update_statistics)
+
+
+    def init_statistics(self) -> None:
+        """
+        Initiates statistic label
+        :return: None
+        """
+        self.statistics_label.setText("Statistics:")
+        self.statistics_label.move(*ui.STATISTICS_LABEL_OFFSET)
+        self.statistics_label.setFixedWidth(self.width())
 
     def set_hex_radius(self, map_size: int) -> None:
         """
@@ -142,6 +156,14 @@ class Window(QtWidgets.QMainWindow):
             tank_id = state.get_our_tank_id(cell)
             return str(state.our_tanks[tank_id].health), ui.OUR_TANKS_COLOR
         return str(state.enemy_tanks[cell].health), ui.ENEMY_COLOR
+
+    def update_statistics(self, stats: str) -> None:
+        """
+        Slot that updates current game statistics in main window
+        :param stats: string game statistics received from game thread
+        :return: None
+        """
+        self.statistics_label.setText(f"Statistics: {stats}")
 
     def show_message(self, text: str) -> None:
         """
