@@ -44,24 +44,23 @@ class Game(QtCore.QThread):
         self.init_game()
 
         # <---------------------- main loop ---------------------
-        while not (self.game_state.is_last_round() and self.game_state.is_finished):
+        while True:
             self.refresh_game_state()
-            while True:
-                self.refresh_game_state()
-                if self.game_state.is_finished:
-                    self.update_statistic()
-                    self.update.emit(str(self.game_statistic))
-                    if not self.game_state.is_last_round():
-                        self.connection.send(Actions.TURN)
-                    break
-                if self.game_state.current_turn != turn:
-                    turn = self.game_state.current_turn
-                    self.game_state_updated.emit(self.map, deepcopy(self.game_state))
-                if self.game_state.current_player != self.idx:
+            if self.game_state.is_finished:
+                self.update_statistic()
+                self.update.emit(str(self.game_statistic))
+                if not self.game_state.is_last_round():
                     self.connection.send(Actions.TURN)
                     continue
-                self.make_turn()
+                break
+            if self.game_state.current_turn != turn:
+                turn = self.game_state.current_turn
+                self.game_state_updated.emit(self.map, deepcopy(self.game_state))
+            if self.game_state.current_player != self.idx:
                 self.connection.send(Actions.TURN)
+                continue
+            self.make_turn()
+            self.connection.send(Actions.TURN)
         # <-------------------- end of main loop ----------------
 
         self.game_ended.emit(str(self.game_statistic))
