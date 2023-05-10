@@ -1,5 +1,10 @@
+"""
+This module contains LoginWindow that
+is called on the starting of the app
+"""
 import random
 from copy import deepcopy
+from typing import Optional
 
 from PySide6 import QtWidgets
 
@@ -10,16 +15,26 @@ from config.config import DEFAULT_LOGIN
 
 
 class LoginWindow(QtWidgets.QWidget):
+    """
+    Class that represents login dialogue window
+    it contains fields to input login data.
+    Default se
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.default_login = DEFAULT_LOGIN
-        self.init_UI()
+        self.login_data: Optional[dict] = None
         self.threads: list[Game] = []
+
+        self.init_UI()
         self.init_signals()
-        self.window_connected = False
 
-    def init_UI(self):
-
+    def init_UI(self) -> None:
+        """
+        UI initialisation, didn't use designer here, because
+        it may be harder to maintain
+        :return:
+        """
         main_layout = QtWidgets.QVBoxLayout()
 
         name_layout = QtWidgets.QHBoxLayout()
@@ -86,25 +101,37 @@ class LoginWindow(QtWidgets.QWidget):
 
         self.setLayout(main_layout)
 
-    def init_signals(self):
+    def init_signals(self) -> None:
+        """
+        Initiate signals
+        :return: None
+        """
         self.start_button.clicked.connect(self.start_game)
         self.is_test_input.stateChanged.connect(self.block_input)
 
-    def block_input(self):
+    def block_input(self) -> None:
+        """
+        Signal connected to CheckBox that asks about multiplayer
+        test mode, if mode selected - data in blocked fields will be
+        generated automatically in init_test_login method
+        :return:
+        """
         if self.is_test_input.isChecked():
             self.num_players_input.setValue(3)
             self.num_players_input.setEnabled(False)
-            self.name_input.setText(f"{random.random()}")
             self.name_input.setEnabled(False)
-            self.game_input.setText(f"{random.random()}")
             self.game_input.setEnabled(False)
         else:
             self.num_players_input.setEnabled(True)
             self.name_input.setEnabled(True)
             self.game_input.setEnabled(True)
 
-    def start_game(self):
-        login_data = {
+    def init_login_data(self) -> None:
+        """
+        sets login data according to user input in login form
+        :return: None
+        """
+        self.login_data = {
             "name": self.name_input.text(),
             "password": self.password_input.text(),
             "game": self.game_input.text(),
@@ -113,30 +140,49 @@ class LoginWindow(QtWidgets.QWidget):
             "is_observer": False,
             "is_full": self.is_full_input.isChecked()
         }
-        if self.is_test_input.isChecked():
-            login_data2 = deepcopy(login_data)
-            login_data3 = deepcopy(login_data)
-            login_data2["name"] += "1"
-            login_data3["name"] += "2"
-            self.threads.append(Game(login_data2))
-            self.threads.append(Game(login_data3))
-            for thread in self.threads:
-                thread.start()
 
-        self.game_window = Window(login_data, parent=None)
-        self.game_window.closed.connect(self.on_close_main_widget)
-        self.game_window.show()
+    def start_game(self) -> None:
+        """
+        Takes user data using init_login_data, instantiates
+        main window with given login_data, if multiplayer test
+        mod selected - calls init_test_login to create additional bots
+        :return: None
+        """
+        self.init_login_data()
+
+        if self.is_test_input.isChecked():
+            self.init_test_login()
+
+        self.main_window = Window(self.login_data, parent=None)
+        self.main_window.closed.connect(self.on_close_main_widget)
+        self.main_window.show()
         self.start_button.setEnabled(False)
 
-    def on_close_main_widget(self):
+    def init_test_login(self) -> None:
+        """
+        Generates random login data if multiplayer test
+        mod selected, runs additional bots in threads
+        :return: None
+        """
+        self.login_data["name"] = f"{random.random()}"
+        self.login_data["game"] = f"{random.random()}"
+        login_data2 = deepcopy(self.login_data)
+        login_data3 = deepcopy(self.login_data)
+        login_data2["name"] += "1"
+        login_data3["name"] += "2"
+        self.threads.append(Game(login_data2))
+        self.threads.append(Game(login_data3))
+        for thread in self.threads:
+            thread.start()
+
+    def on_close_main_widget(self) -> None:
+        """
+        Slot connected to signal emitted by main_window
+        when it is closed, it stops all bot_threads if
+        they exist, and sets start_button enabled
+        :return: None
+        """
         for thread in self.threads:
             thread.exit()
+        self.threads = []
         self.start_button.setEnabled(True)
-
-
-
-if __name__ == "__main__":
-    app = QtWidgets.QApplication()
-    login_window = LoginWindow()
-    login_window.show()
-    app.exec()
