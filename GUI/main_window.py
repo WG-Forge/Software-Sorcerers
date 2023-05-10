@@ -32,7 +32,6 @@ class Window(QtWidgets.QMainWindow):
         self.setFixedSize(self.size())
         self.hex_outer_radius = None
         self.statistics_label = QtWidgets.QLabel(self)
-        self.login_window = LoginWindow()
         self.init_statistics()
         self.init_signals()
 
