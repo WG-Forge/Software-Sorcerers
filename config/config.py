@@ -56,5 +56,5 @@ DEFAULT_LOGIN = {
     "num_turns": 45,
     "num_players": 1,
     "is_observer": False,
-    "is_full": False
+    "is_full": False,
 }

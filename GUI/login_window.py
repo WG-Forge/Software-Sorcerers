@@ -20,6 +20,7 @@ class LoginWindow(QtWidgets.QWidget):
     it contains fields to input login data.
     Default se
     """
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.default_login = DEFAULT_LOGIN
@@ -138,7 +139,7 @@ class LoginWindow(QtWidgets.QWidget):
             "num_turns": self.num_turns_input.value(),
             "num_players": self.num_players_input.value(),
             "is_observer": False,
-            "is_full": self.is_full_input.isChecked()
+            "is_full": self.is_full_input.isChecked(),
         }
 
     def start_game(self) -> None:

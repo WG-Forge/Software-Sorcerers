@@ -17,6 +17,7 @@ class Window(QtWidgets.QMainWindow):
     """
     Main window of user interface
     """
+
     closed = QtCore.Signal()
 
     def __init__(self, login_data: dict, parent=None):
