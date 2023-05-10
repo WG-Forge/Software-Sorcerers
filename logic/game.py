@@ -31,8 +31,7 @@ class Game(QtCore.QThread):
         self.game_state: Optional[GameState] = None
         self.game_actions: Optional[GameActions] = None
         self.map: Optional[GameMap] = None
-        self.game_statistic = {"Draws": 0,
-                               "Your wins": 0}
+        self.game_statistic = {"Draws": 0, "Your wins": 0}
 
     def run(self) -> None:
         """
@@ -97,6 +96,11 @@ class Game(QtCore.QThread):
             self.vehicles_list.append(Vehicle.build(t_id, spec))
 
     def make_turn(self) -> None:
+        """
+        Asks ours vehicle to make turn in order they were instantiated
+        in the beginning of the game
+        :return: None
+        """
         for vehicle in self.vehicles_list:
             vehicle_turn = vehicle.make_turn(self.game_state, self.map)
             if vehicle_turn:
@@ -120,7 +124,15 @@ class Game(QtCore.QThread):
         self.map = GameMap(self.connection.send(Actions.MAP))
         self.init_vehicles()
 
-    def update_statistic(self):
+    def update_statistic(self) -> None:
+        """
+        Keeps win statistics up to date. Game statistics
+        is emitted by this thread and used in main window.
+        Can be expanded with other info, it will require
+        modification of slot that is connected to "update"
+        signal in main_window.
+        :return: None
+        """
         winner = self.game_state.winner
         if winner is None:
             self.game_statistic["Draws"] += 1
