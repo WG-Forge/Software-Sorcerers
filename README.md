@@ -4,8 +4,9 @@ https://github.com/DimonDimskiy - Dmitrii Skrypnik
 
 ## How to run
 For GUI implementation used PySide6, all required packages in requirements.txt. App  tested on Python 3.11.
-To run the app you should run main.py, login data also in main.py.
-Or you can run tests/test_multiplayer.py to create three bots in different threads.
+To run the app you should run main.py. You can run bot on multiplayer test mode by placing a checkmark in 
+CheckBox next to this login option in login window. This option will block some login input fields that will
+be generated automatticly.
 
 ## Module description
 **main.py** entry point with login data
@@ -39,9 +40,9 @@ Or you can run tests/test_multiplayer.py to create three bots in different threa
 
 **hex_widget.py** contains Hex QWidget class, used by main window to represent game cells in GUI
 
+**login_window** contains LoginWindow widget, that will be displayed on the app start to ask user for inputing login data.
+
 ### tests folder
 **test_cell.py** unittest for cell.py
 
 **test_connection.py** unittest for connection.py
-
-**test_multiplayer.py** alternative entry point to the app that runs three bots in different threads to test multiplayer
