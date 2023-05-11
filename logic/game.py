@@ -72,7 +72,6 @@ class Game(QtCore.QThread):
         """
         Method that creates GameState obj from GAME_STATE dict response,
         and refreshes self.game_state
-        :param game_state: GAME_STATE dict response
         :return: None
         """
         self.game_state = GameState(self.connection.send(Actions.GAME_STATE), self.idx)
