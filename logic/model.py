@@ -137,28 +137,14 @@ class GameState:
                 )
         return tanks_dict
 
-    def get_ordered_tanks(self) -> OrderedDict:
+    def get_ordered_tanks(self) -> list:
         """
         Creates ordered dict of player tanks, used only once at the beginning
         of the game to instantiate vehicles and define order of their turn
         :return: ordered left-to-right dict (tank_id: TankModel)
         """
-        first_tank = list(self.our_tanks.values())[0]
-        second_tank = list(self.our_tanks.values())[1]
-        if first_tank.coordinates.x == second_tank.coordinates.x:
-            sorting_key = 2
-        elif first_tank.coordinates.y == second_tank.coordinates.y:
-            sorting_key = 0
-        else:
-            sorting_key = 1
-        sorted_items = sorted(
-            self.our_tanks.items(),
-            key=lambda x: abs(dataclasses.astuple(x[1].coordinates)[sorting_key]),
-        )
-        ordered_tanks = coll.OrderedDict()
-        for key, value in sorted_items:
-            ordered_tanks[key] = value
-        return ordered_tanks
+
+        return sorted((tank for tank in self.our_tanks.items()), key=lambda x: gb_cf.TURN_ORDER[x[1].vehicle_type])
 
     @staticmethod
     def parse_tank_cells(vehicles: dict) -> set[Cell]:

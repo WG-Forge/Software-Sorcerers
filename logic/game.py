@@ -91,7 +91,7 @@ class Game(QtCore.QThread):
         to game_state, add them into list in the order of their turn
         :return: None
         """
-        for t_id, spec in self.game_state.get_ordered_tanks().items():
+        for t_id, spec in self.game_state.get_ordered_tanks():
             self.vehicles_list.append(Vehicle.build(t_id, spec))
 
     def make_turn(self) -> None:

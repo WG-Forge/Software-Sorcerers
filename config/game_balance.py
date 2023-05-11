@@ -18,5 +18,12 @@ SPEED_POINTS = {
     "spg": 1,
 }
 
+TURN_ORDER = {         # If at_spg turn order will be changed
+    "medium_tank": 4,  # should be modified update game_state
+    "at_spg": 5,       # method due to at_spg shooting mechanics
+    "heavy_tank": 3,
+    "light_tank": 2,
+    "spg": 1,
+}
 MAX_CATAPULT_USAGE = 3
 MAX_CAPTURE_POINTS = 6
