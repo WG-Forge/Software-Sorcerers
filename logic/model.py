@@ -90,6 +90,8 @@ class GameState:
         self.idx = idx
         self.winner = data["winner"]
         self.current_turn = data["current_turn"]
+        self.num_players = data["num_players"]
+        self.players = [i for i in data["players"] if not i["is_observer"]]
         self.is_finished = data["finished"]
         self.round = data["current_round"]
         self.num_rounds = data["num_rounds"]
@@ -271,6 +273,12 @@ class GameState:
         Check is current round last in full game
         """
         return self.round == self.num_rounds
+
+    def is_ready(self) -> bool:
+        """
+        :return: True if all players are connected
+        """
+        return self.num_players == len(self.players)
 
 
 class GameActions:
