@@ -31,7 +31,7 @@ class Game(QtCore.QThread):
         self.game_state: Optional[GameState] = None
         self.game_actions: Optional[GameActions] = None
         self.map: Optional[GameMap] = None
-        self.game_statistic = {"Draws": 0, "Your wins": 0}
+        self.game_statistic = {"Draws": 0, }
 
     def run(self) -> None:
         """
@@ -46,6 +46,8 @@ class Game(QtCore.QThread):
         # <---------------------- main loop ---------------------
         while True:
             self.refresh_game_state()
+            if not self.game_state.is_ready():
+                continue
             if self.game_state.is_finished:
                 self.update_statistic()
                 self.update.emit(str(self.game_statistic))
@@ -121,6 +123,7 @@ class Game(QtCore.QThread):
         self.refresh_game_state()
         self.map = GameMap(self.connection.send(Actions.MAP))
         self.init_vehicles()
+        self.game_state_updated.emit(self.map, self.game_state)
 
     def update_statistic(self) -> None:
         """
@@ -131,12 +134,14 @@ class Game(QtCore.QThread):
         signal in main_window.
         :return: None
         """
-        winner = self.game_state.winner
-        if winner is None:
+        winner_id = self.game_state.winner
+        if winner_id is None:
             self.game_statistic["Draws"] += 1
-        elif winner == self.idx:
-            self.game_statistic["Your wins"] += 1
-        elif winner in self.game_statistic:
-            self.game_statistic[winner] += 1
         else:
-            self.game_statistic[winner] = 1
+            winner = next(
+                i["name"] for i in self.game_state.players if i["idx"] == winner_id
+            )
+            if winner in self.game_statistic:
+                self.game_statistic[winner] += 1
+            else:
+                self.game_statistic[winner] = 1
