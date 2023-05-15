@@ -18,4 +18,3 @@ CONTENT_FILL = {
     "spawn": ("", (160, 160, 160)),
 }
 STATISTICS_LABEL_OFFSET = (10, 0)
-
