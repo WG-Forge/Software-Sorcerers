@@ -9,7 +9,6 @@ from typing import Optional
 from PySide6 import QtWidgets
 
 from logic.game import Game
-from GUI import ui
 from GUI.main_window import Window
 from config.config import DEFAULT_LOGIN
 
@@ -37,67 +36,49 @@ class LoginWindow(QtWidgets.QWidget):
         :return:
         """
         main_layout = QtWidgets.QVBoxLayout()
+        grid_layout = QtWidgets.QGridLayout()
 
-        name_layout = QtWidgets.QHBoxLayout()
         name_label = QtWidgets.QLabel("Name:")
-        name_label.setFixedWidth(ui.LOGIN_LABEL_WIDTH)
         self.name_input = QtWidgets.QLineEdit(self.default_login["name"])
-        name_layout.addWidget(name_label)
-        name_layout.addWidget(self.name_input)
 
-        password_layout = QtWidgets.QHBoxLayout()
         password_label = QtWidgets.QLabel("Password:")
-        password_label.setFixedWidth(ui.LOGIN_LABEL_WIDTH)
         self.password_input = QtWidgets.QLineEdit(self.default_login["password"])
-        password_layout.addWidget(password_label)
-        password_layout.addWidget(self.password_input)
 
-        game_layout = QtWidgets.QHBoxLayout()
         game_label = QtWidgets.QLabel("Game:")
-        game_label.setFixedWidth(ui.LOGIN_LABEL_WIDTH)
         self.game_input = QtWidgets.QLineEdit(self.default_login["game"])
-        game_layout.addWidget(game_label)
-        game_layout.addWidget(self.game_input)
 
-        num_turns_layout = QtWidgets.QHBoxLayout()
         num_turns_label = QtWidgets.QLabel("Number of turns:")
-        num_turns_label.setFixedWidth(ui.LOGIN_LABEL_WIDTH)
         self.num_turns_input = QtWidgets.QSpinBox()
         self.num_turns_input.setValue(self.default_login["num_turns"])
-        num_turns_layout.addWidget(num_turns_label)
-        num_turns_layout.addWidget(self.num_turns_input)
 
-        num_players_layout = QtWidgets.QHBoxLayout()
         num_players_label = QtWidgets.QLabel("Number of players")
-        num_players_label.setFixedWidth(ui.LOGIN_LABEL_WIDTH)
         self.num_players_input = QtWidgets.QSpinBox()
         self.num_players_input.setRange(1, 3)
-        num_players_layout.addWidget(num_players_label)
-        num_players_layout.addWidget(self.num_players_input)
 
-        is_full_layout = QtWidgets.QHBoxLayout()
         is_full_label = QtWidgets.QLabel("Full game?")
-        is_full_label.setFixedWidth(ui.LOGIN_LABEL_WIDTH)
         self.is_full_input = QtWidgets.QCheckBox()
-        is_full_layout.addWidget(is_full_label)
-        is_full_layout.addWidget(self.is_full_input)
 
-        is_test_layout = QtWidgets.QHBoxLayout()
         is_test_label = QtWidgets.QLabel("Run test multiplayer?")
-        is_test_label.setFixedWidth(ui.LOGIN_LABEL_WIDTH)
         self.is_test_input = QtWidgets.QCheckBox()
-        is_test_layout.addWidget(is_test_label)
-        is_test_layout.addWidget(self.is_test_input)
 
-        main_layout.addLayout(name_layout)
-        main_layout.addLayout(password_layout)
-        main_layout.addLayout(game_layout)
-        main_layout.addLayout(num_turns_layout)
-        main_layout.addLayout(num_players_layout)
-        main_layout.addLayout(is_full_layout)
-        main_layout.addLayout(is_test_layout)
+        grid_layout.addWidget(name_label, 1, 1)
+        grid_layout.addWidget(self.name_input, 1, 2)
+        grid_layout.addWidget(password_label, 2, 1)
+        grid_layout.addWidget(self.password_input, 2, 2)
+        grid_layout.addWidget(game_label, 3, 1)
+        grid_layout.addWidget(self.game_input, 3, 2)
+        grid_layout.addWidget(num_turns_label, 4, 1)
+        grid_layout.addWidget(self.num_turns_input, 4, 2)
+        grid_layout.addWidget(num_players_label, 5, 1)
+        grid_layout.addWidget(self.num_players_input, 5, 2)
+        grid_layout.addWidget(is_full_label, 6, 1)
+        grid_layout.addWidget(self.is_full_input, 6, 2)
+        grid_layout.addWidget(is_test_label, 7, 1)
+        grid_layout.addWidget(self.is_test_input, 7, 2)
 
         self.start_button = QtWidgets.QPushButton("Start game!")
+
+        main_layout.addLayout(grid_layout)
         main_layout.addWidget(self.start_button)
 
         self.setLayout(main_layout)

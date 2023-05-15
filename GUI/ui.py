@@ -18,4 +18,4 @@ CONTENT_FILL = {
     "spawn": ("", (160, 160, 160)),
 }
 STATISTICS_LABEL_OFFSET = (10, 0)
-LOGIN_LABEL_WIDTH = 150
+
