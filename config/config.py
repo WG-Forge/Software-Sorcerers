@@ -50,7 +50,7 @@ class Actions(IntEnum):
 
 
 DEFAULT_LOGIN = {
-    "name": "SorcererBot",
+    "name": "Sorcerer",
     "password": "42",
     "game": "test_122",
     "num_turns": 45,
