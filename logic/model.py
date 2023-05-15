@@ -129,13 +129,13 @@ class GameState:
                 i["spawn_position"]["z"],
             )
             tank = TankModel(
-                    health,
-                    model,
-                    position,
-                    shoot_range_bonus,
-                    capture_points,
-                    spawn_point,
-                )
+                health,
+                model,
+                position,
+                shoot_range_bonus,
+                capture_points,
+                spawn_point,
+            )
             if i["player_id"] == self.idx:
                 self.our_tanks[tank_id] = tank
             else:
@@ -151,7 +151,8 @@ class GameState:
 
         return sorted(
             (tank for tank in self.our_tanks.items()),
-            key=lambda x: gb_cf.TURN_ORDER[x[1].vehicle_type])
+            key=lambda x: gb_cf.TURN_ORDER[x[1].vehicle_type],
+        )
 
     @staticmethod
     def parse_tank_cells(vehicles: dict) -> set[Cell]:
