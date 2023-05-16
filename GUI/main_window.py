@@ -4,7 +4,7 @@ This module contains implementation of main window, using PySide6
 """
 import math
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from logic.cell import Cell
 from logic.game import Game
@@ -17,6 +17,8 @@ class Window(QtWidgets.QMainWindow):
     """
     Main window of user interface
     """
+
+    closed = QtCore.Signal()
 
     def __init__(self, login_data: dict, parent=None):
         super().__init__(parent)
@@ -31,6 +33,8 @@ class Window(QtWidgets.QMainWindow):
         )
         self.setFixedSize(self.size())
         self.hex_outer_radius = None
+        self.statistics_label = QtWidgets.QLabel(self)
+        self.init_statistics()
         self.init_signals()
 
     def get_mid_map(self) -> tuple[int, int]:
@@ -49,6 +53,16 @@ class Window(QtWidgets.QMainWindow):
         """
         self.presenter_thread.game_state_updated.connect(self.refresh_map)
         self.presenter_thread.game_ended.connect(self.show_message)
+        self.presenter_thread.update.connect(self.update_statistics)
+
+    def init_statistics(self) -> None:
+        """
+        Initiates statistic label
+        :return: None
+        """
+        self.statistics_label.setText("Statistics:")
+        self.statistics_label.move(*ui.STATISTICS_LABEL_OFFSET)
+        self.statistics_label.setFixedWidth(self.width())
 
     def set_hex_radius(self, map_size: int) -> None:
         """
@@ -141,7 +155,15 @@ class Window(QtWidgets.QMainWindow):
         if cell in state.get_our_tanks_cells():
             tank_id = state.get_our_tank_id(cell)
             return str(state.our_tanks[tank_id].health), ui.OUR_TANKS_COLOR
-        return str(state.enemy_tanks[cell]), ui.ENEMY_COLOR
+        return str(state.enemy_tanks[cell].health), ui.ENEMY_COLOR
+
+    def update_statistics(self, stats: str) -> None:
+        """
+        Slot that updates current game statistics in main window
+        :param stats: string game statistics received from game thread
+        :return: None
+        """
+        self.statistics_label.setText(f"Statistics: {stats}")
 
     def show_message(self, text: str) -> None:
         """
@@ -158,4 +180,5 @@ class Window(QtWidgets.QMainWindow):
         :param event: system generated event
         :return: None
         """
+        self.closed.emit()
         self.presenter_thread.exit()

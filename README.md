@@ -4,8 +4,9 @@ https://github.com/DimonDimskiy - Dmitrii Skrypnik
 
 ## How to run
 For GUI implementation used PySide6, all required packages in requirements.txt. App  tested on Python 3.11.
-To run the app you should run main.py, login data also in main.py.
-Or you can run tests/test_multiplayer.py to create three bots in different threads.
+To run the app you should run main.py. You can run bot on multiplayer test mode by placing a checkmark in 
+CheckBox next to this login option in login window. This option will block some login input fields that will
+be generated automatically.
 
 ## Module description
 **main.py** entry point with login data
@@ -16,19 +17,19 @@ Or you can run tests/test_multiplayer.py to create three bots in different threa
 **game.py** contains Game thread class with main game loop.
 
 **model.py** contains classes to parse and store game data:
-- GameMap - parse and store static game map objects
-- GameState - parse and store dynamic game data
-- GameActions - parse and store actions provided in previous turn / currently not used
-- TankModel - dataclass that store dynamic state of each our tank
+- GameMap - parses and stores static game map objects
+- GameState - parsse and stores dynamic game data
+- GameActions - parses and stores actions provided in previous turn / currently not used
+- TankModel - dataclass that stores dynamic state of each our tank
 
-**vehicle.py** contains classes that handles bot turn logic:
-- Vehicle  - superclass to all vehicle types, has a factory method to instantiate proper type of vehicle, implements common behavior of vehicles
-- VehicleType classes - inherit Vehicle, implements some different logic for each type of vehicle
+**vehicle.py** contains classes that handle bot turn logic:
+- Vehicle  - superclass to all vehicle types, has a factory method to instantiate proper type of vehicles, implements common behavior of vehicles
+- VehicleType classes - inherits Vehicle, implements different logic for each type of vehicles
 
-**cell.py** contains Cell class - dataclass with methods that handles cubic coordinate math operations, and A* pathfinding algorithm.
+**cell.py** contains Cell class - dataclass with methods that handle cubic coordinate math operations, and A* pathfinding algorithm.
 
 ### config folder
-**config.py** constants used in game and client-server interact
+**config.py** constants used in game and client-server interactions
 
 **game_balance.py** constants that store vehicle characteristics defined by game rules
 
@@ -39,9 +40,9 @@ Or you can run tests/test_multiplayer.py to create three bots in different threa
 
 **hex_widget.py** contains Hex QWidget class, used by main window to represent game cells in GUI
 
+**login_window** contains LoginWindow widget, that will be displayed in the app start to ask user for inputing login data.
+
 ### tests folder
 **test_cell.py** unittest for cell.py
 
 **test_connection.py** unittest for connection.py
-
-**test_multiplayer.py** alternative entry point to the app that runs three bots in different threads to test multiplayer

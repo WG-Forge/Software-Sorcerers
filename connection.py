@@ -67,7 +67,7 @@ class Connection:
             chunks.append(chunk)
             bytes_recd = bytes_recd + len(chunk)
         if status_code != cf.StatusCode.OKEY:
-            raise RuntimeError(f"{cf.StatusCode(status_code)}", b"".join(chunks))
+            print(f"{cf.StatusCode(status_code)}", b"".join(chunks))
         return b"".join(chunks)
 
     @staticmethod

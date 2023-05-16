@@ -1,9 +1,9 @@
 """
 This module contains classes to parse and store game data
+also provided contained minimum of game logic, such as
+rule of neutrality and finding inactive catapults
 """
-import collections as coll
 import dataclasses
-from typing import Optional, OrderedDict
 
 from config import game_balance as gb_cf
 from config.config import Actions
@@ -14,32 +14,34 @@ CENTER_POINT = (0, 0, 0)
 
 class GameMap:
     """
-    Data class to parse and store static game objects from GAME_MAP response
+    Data class to parse and store static
+    game objects from GAME_MAP response
     """
 
     def __init__(self, data: dict):
         self.size = data["size"]
         self.name = data["name"]
         self.cells = Cell(*CENTER_POINT).in_radius(self.size - 1)
-        self.obstacles = self.parse_content(data["content"], "obstacle")
         self.spawn_points = self.parse_spawn_points(data["spawn_points"])
+
+        self.obstacles = self.parse_content(data["content"], "obstacle")
         self.base = self.parse_content(data["content"], "base")
         self.light_repairs = self.parse_content(data["content"], "light_repair")
         self.hard_repairs = self.parse_content(data["content"], "hard_repair")
         self.catapults = self.parse_content(data["content"], "catapult")
 
     @staticmethod
-    def parse_content(content: dict, content_type: str) -> set[Optional[Cell]]:
+    def parse_content(content: dict, content_type: str) -> set[Cell]:
         """
         Handles parsing obstacles from content part of GAME_MAP response
         :param content: dict with content part of GAME_MAP response
         :param content_type: name of content type defined by game rules in
-        client-server interact protocol
+        client-server interaction protocol
         :return: set of obstacle Cell
         """
         if content_type in content:
             return {Cell(i["x"], i["y"], i["z"]) for i in content[content_type]}
-        return set()  # Here is not used None to avoid TypeError in self.available_cells
+        return set()
 
     @staticmethod
     def parse_spawn_points(spawn_points: list) -> set[Cell]:
@@ -79,70 +81,78 @@ class GameMap:
 class GameState:
     """
     Data class to parse and store dynamic game data from GAME_STATE response
-    In part of game logic handle only neutrality rule. Also updates during
-    players turn to avoid move collisions, and shooting
-    units destroyed by previous tank
+    In part of game logic handle only neutrality rule, and finding inactive
+    catapults. Also updates during players turn to avoid move collisions,
+    and shooting units destroyed by previous tank
     """
 
     def __init__(self, data: dict, idx: int):
         self.idx = idx
+        self.winner = data["winner"]
         self.current_turn = data["current_turn"]
-        self.attack_matrix = data["attack_matrix"]
+        self.num_players = data["num_players"]
+        self.players = [i for i in data["players"] if not i["is_observer"]]
+        self.is_finished = data["finished"]
+        self.round = data["current_round"]
+        self.num_rounds = data["num_rounds"]
+        self.current_player = data["current_player_idx"]
 
+        self.attack_matrix = data["attack_matrix"]
         self.attack_matrix.pop(str(self.idx))
 
-        self.enemy_tanks = self.parse_enemy_tanks(data["vehicles"])
-        self.our_tanks = self.parse_tanks_by_id(data["vehicles"], idx)
+        self.enemy_tanks: dict[Cell, TankModel] = {}
+        self.our_tanks: dict[int, TankModel] = {}
+        self.parse_tanks(data["vehicles"])
+
         self.tank_cells = self.parse_tank_cells(data["vehicles"])
         self.aggressive_tanks = self.parse_aggressive_tanks(data["vehicles"])
+        self.inactive_catapults = self.parse_inactive_catapults(data["catapult_usage"])
 
-    @staticmethod
-    def parse_tanks_by_id(vehicles: dict, idx: int) -> dict[int, "TankModel"]:
+    def parse_tanks(self, vehicles: dict) -> None:
         """
         Handles parsing of tanks from "vehicles" part of
-        GAME_STATE response for player with given id
+        GAME_STATE response, sets enemy and our tanks attributes
         :param vehicles: dict with vehicles from response
-        :param idx: player id
-        :return: dict(tank_id: TankModel)
+        :return: None
         """
-        tanks_dict = {}
-        for tank_id, i in vehicles.items():
-            if i["player_id"] == idx:
-                tank_id = int(tank_id)
-                position = Cell(
-                    i["position"]["x"], i["position"]["y"], i["position"]["z"]
-                )
-                health = i["health"]
-                model = i["vehicle_type"]
-                shoot_range_bonus = i["shoot_range_bonus"]
-                capture_points = i["capture_points"]
-                tanks_dict[tank_id] = TankModel(
-                    health, model, position, shoot_range_bonus, capture_points
-                )
-        return tanks_dict
 
-    def get_ordered_tanks(self) -> OrderedDict:
+        for tank_id, i in vehicles.items():
+            tank_id = int(tank_id)
+            position = Cell(i["position"]["x"], i["position"]["y"], i["position"]["z"])
+            health = i["health"]
+            model = i["vehicle_type"]
+            shoot_range_bonus = i["shoot_range_bonus"]
+            capture_points = i["capture_points"]
+            spawn_point = Cell(
+                i["spawn_position"]["x"],
+                i["spawn_position"]["y"],
+                i["spawn_position"]["z"],
+            )
+            tank = TankModel(
+                health,
+                model,
+                position,
+                shoot_range_bonus,
+                capture_points,
+                spawn_point,
+            )
+            if i["player_id"] == self.idx:
+                self.our_tanks[tank_id] = tank
+            else:
+                self.enemy_tanks[position] = tank
+
+    def get_ordered_tanks(self) -> list[tuple[int, "TankModel"]]:
         """
-        Creates ordered dict of player tanks, used only once at the beginning
-        of the game to instantiate vehicles and define order of their turn
+        Creates ordered list of player tanks, used only once
+        at the beginning of the game to instantiate vehicles
+        and define order of their turn
         :return: ordered left-to-right dict (tank_id: TankModel)
         """
-        first_tank = list(self.our_tanks.values())[0]
-        second_tank = list(self.our_tanks.values())[1]
-        if first_tank.coordinates.x == second_tank.coordinates.x:
-            sorting_key = 2
-        elif first_tank.coordinates.y == second_tank.coordinates.y:
-            sorting_key = 0
-        else:
-            sorting_key = 1
-        sorted_items = sorted(
-            self.our_tanks.items(),
-            key=lambda x: abs(dataclasses.astuple(x[1].coordinates)[sorting_key]),
+
+        return sorted(
+            (tank for tank in self.our_tanks.items()),
+            key=lambda x: gb_cf.TURN_ORDER[x[1].vehicle_type],
         )
-        ordered_tanks = coll.OrderedDict()
-        for key, value in sorted_items:
-            ordered_tanks[key] = value
-        return ordered_tanks
 
     @staticmethod
     def parse_tank_cells(vehicles: dict) -> set[Cell]:
@@ -158,8 +168,9 @@ class GameState:
 
     def parse_aggressive_tanks(self, vehicles: dict) -> dict[Cell, int]:
         """
+        Parses tanks we allowed of players we allowed to shoot
         :param vehicles: dict with "vehicles" part of GAME_STATE response
-        :return: dict (cell: health) of tanks that we can shoot
+        :return: dict (cell: health)
         """
         aggressive_tanks = {}
         for i in vehicles.values():
@@ -169,23 +180,11 @@ class GameState:
                 aggressive_tanks[Cell(*position)] = health
         return aggressive_tanks
 
-    def parse_enemy_tanks(self, vehicles: dict) -> dict[Cell, int]:
-        """
-        :param vehicles: dict with "vehicles" part of GAME_STATE response
-        :return: dict (cell: health) of enemy tanks
-        """
-        enemy_tanks = {}
-        for i in vehicles.values():
-            if i["player_id"] != self.idx:
-                position = (i["position"]["x"], i["position"]["y"], i["position"]["z"])
-                health = i["health"]
-                enemy_tanks[Cell(*position)] = health
-        return enemy_tanks
-
     def get_our_tank_id(self, cell) -> int:
         """
+        Returns id of our tank in given cell
         :param cell: cell with tank
-        :return: t_id of our tank in given cell
+        :return: int t_id
         """
         for tank_id, model in self.our_tanks.items():
             if model.coordinates == cell:
@@ -206,7 +205,7 @@ class GameState:
                 non_neutral_set.add(int(player))
         return non_neutral_set
 
-    def update_data(self, data: tuple[str, dict]) -> None:
+    def update_data(self, data: tuple[Actions, dict]) -> None:
         """
         updates tanks state for current turn using action provided by vehicle
         :param data: action provided by vehicle in vehicles turn
@@ -249,6 +248,39 @@ class GameState:
         """
         return {vehicle.coordinates for vehicle in self.our_tanks.values()}
 
+    @staticmethod
+    def parse_inactive_catapults(catapult_usage: list) -> set[Cell]:
+        """
+        Parse and return set with cells where located catapults
+        that we can't use so far
+        :param catapult_usage:
+        :return:
+        """
+        list_usage = []
+        for i in catapult_usage:
+            list_usage.append(Cell(*i.values()))
+        return {
+            i for i in list_usage if list_usage.count(i) == gb_cf.MAX_CATAPULT_USAGE
+        }
+
+    def get_total_cp(self) -> int:
+        """
+        :return: total amount of our capture points
+        """
+        return sum(i.capture_points for i in self.our_tanks.values())
+
+    def is_last_round(self) -> bool:
+        """
+        Check is current round last in full game
+        """
+        return self.round == self.num_rounds
+
+    def is_ready(self) -> bool:
+        """
+        :return: True if all players are connected
+        """
+        return self.num_players == len(self.players)
+
 
 class GameActions:
     """
@@ -263,7 +295,7 @@ class GameActions:
 @dataclasses.dataclass
 class TankModel:
     """
-    Dataclass to store dynamic state of tanks
+    Dataclass to store dynamic state of our tanks
     """
 
     health: int
@@ -271,3 +303,4 @@ class TankModel:
     coordinates: Cell
     shoot_range_bonus: int
     capture_points: int
+    spawn_point: Cell
